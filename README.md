@@ -1,4 +1,4 @@
-# 4n6_tools
+# forensics_tools
 Various short scripts and tools used for Digital Forensics
 
 - ip2dec - Convert an IP Address to a decimal number, commonly used in GeoIP CSV's
