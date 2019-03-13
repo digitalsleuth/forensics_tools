@@ -1,9 +1,18 @@
 :: The Purpose of this Batch Script is to allow for mass mounting of Volume Shadow Copies to a 
 :: mount point on the local Windows filesystem.
 :: v1.1 2019-03-11 Corey Forman
-cls
-@echo off
 
+@echo off
+goto admin
+:admin
+    net session >nul 2>&1
+    if %errorLevel% == 0 (
+		cls
+        goto start
+    ) else (
+        echo This script requires administrator privileges. Run as admin, and try again. Exiting...
+		EXIT /B %ERRORLEVEL%
+    )
 :start
 ECHO Volume Shadow Copy Mount Tool - v1.1
 ECHO.
@@ -58,16 +67,21 @@ goto domount
 :unmount
 :: Properly remove the symlinks for the Volume Shadow Copies, ensuring that the VSC's themselves aren't deleted.
 set /p remchoice="Path where the VSC's are mounted: "
-@echo Removing Symlinks from %remchoice%
+IF NOT EXIST %remchoice% ( echo Path does not exist.
+	pause
+	cls
+	goto start
+) else ( echo Removing Symlinks from %remchoice%
 for /f %%f in ('dir /b %remchoice%\Hard*') do rmdir %remchoice%\%%f
 IF %ERRORLEVEL% NEQ 0 ( echo %ERRORLEVEL%
-EXIT /B %ERRORLEVEL% 
+	EXIT /B %ERRORLEVEL% 
 )
-@echo Symlinks removed
-PAUSE
-cls
-goto start
-
+	echo Symlinks removed
+	PAUSE
+	cls
+	goto start
+)
 :quit
 set "fullpath="
 cls
+
