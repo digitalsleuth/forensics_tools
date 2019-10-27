@@ -112,8 +112,8 @@ echo FILE NUMBER : %input2% >> %results%
 echo CURRENT TIME: %datetime% >> %results%
 echo CORRECT DATE: %input3% >> %results%
 echo CORRECT TIME: %input4% >> %results%
-echo EXHIBIT INFO: %input5% >> %results%
 echo TIMEZONE: %tzcheck% >> %results%
+echo EXHIBIT INFO: %input5% >> %results%
 goto startprocess
 
 :startprocess
