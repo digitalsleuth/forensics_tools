@@ -1,15 +1,17 @@
 @echo off
 :: **************************************************************************************
+:: ** PILFER
+:: ** Source: https://github.com/fetchered/forensics_tools
 :: ** Batch File to quickly gather basic system info & volatile network info
-:: ** then dump it out to a text file called Acquisition_Results.txt. Although not critical,
-:: ** I Recommend that it be run with elevated privs.
+:: ** then dump it out to a text file called Acquisition_Results.txt. 
+:: ** Although not critical, it is recommended that it be run with elevated priveleges,
 :: ** (right click and select "Run as administrator") especially for netstat details.
-:: ** Feel free to modify as you see fit.
 :: **************************************************************************************
-:: ** By Cst. Percival Hall - 2013-12-20 ************************************************
-:: ** Modified by Sgt. Corey Forman - 2019-10-26 ****************************************
+:: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
+:: ** Ongoing maintenance: Sgt. Corey Forman - 2019-10-26 *******************************
 :: **************************************************************************************
-:: ** Version 1.4 ***********************************************************************
+:: ** Version 1.5 ***********************************************************************
+
 setlocal
 set fulltime=%time: =0%
 set workingdir=%~dp0
@@ -48,9 +50,6 @@ echo.
    if /i "%answer1%" EQU "" goto enterfile
    if /i "%answer1:~,1%" EQU "n" goto entername
 
-:: :next1
-:: echo INVESTIGATOR : %input1% >> %results%
-
 :enterfile
 set /p "input2=Enter your File #: "
 echo.
@@ -59,9 +58,6 @@ echo.
    if /i "%answer2:~,1%" EQU "y" goto currentdt
    if /i "%answer2%" EQU "" goto currentdt
    if /i "%answer2:~,1%" EQU "n" goto enterfile
-
-:: :next2
-:: echo FILE NUMBER #: %input2% >> %results%
 
 :currentdt
 set datetime=%date:~4,10%-%time: =0%
@@ -80,9 +76,6 @@ echo.
    if /i "%answer3%" EQU "" goto entertime
    if /i "%answer3:~,1%" EQU "n" goto enterdate
 
-:: :next3
-:: echo CORRECT DATE: %input3% >> %results%
-
 :entertime
 set /p "input4=Enter current correct time (HH:MM): "
 echo.
@@ -91,9 +84,6 @@ echo.
    if /i "%answer4:~,1%" EQU "y" goto enterexhibit
    if /i "%answer4%" EQU "" goto enterexhibit
    if /i "%answer4:~,1%" EQU "n" goto entertime
-
-:: :next4
-:: echo CORRECT TIME: %input4% >> %results%
 
 :enterexhibit
 set /p "input5=Enter descriptive info about this Exhibit: "
@@ -285,15 +275,8 @@ echo -	current drive mappings to a remote computer
 	echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT============= >> %results%
 	echo %BORDER% >> %results%
 		net use | findstr /r /v "^$" >> %results%
+		wmic netuse list full >> %results%
 	echo. >> %results%
-
-:: echo 	cached drive mappings to a remote computer
-:: echo %BORDER% >> %results%
-:: echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CACHED============== >> %results%
-:: echo %BORDER% >> %results%
-:: net view /cache >> %results%
-:: wmic netuse list full >> %results%
-:: echo. >> %results%
 
 echo -	current network connections (detailed)
 	echo %BORDER% >> %results%
