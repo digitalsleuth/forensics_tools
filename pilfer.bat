@@ -7,8 +7,9 @@
 :: ** Feel free to modify as you see fit.
 :: **************************************************************************************
 :: ** By Cst. Percival Hall - 2013-12-20 ************************************************
-:: ** Modified by Sgt. Corey Forman - 2019-09-23 ****************************************
+:: ** Modified by Sgt. Corey Forman - 2019-10-26 ****************************************
 :: **************************************************************************************
+:: ** Version 1.4 ***********************************************************************
 setlocal
 set fulltime=%time: =0%
 set workingdir=%~dp0
@@ -19,6 +20,9 @@ set hour=%fulltime:~0,2%
 set min=%fulltime:~3,2%
 set sec=%fulltime:~6,2%
 set outputfolder=%year%%month%%day%-%hour%%min%%sec%
+set wlanreport=%workingdir%\%outputfolder%\wlan-report
+for /f "tokens=*" %a in ('tzutil /g') do set tzcheck=%a
+set results=%results%
 goto admin
 :admin
     net session >nul 2>&1
@@ -45,7 +49,7 @@ echo.
    if /i "%answer1:~,1%" EQU "n" goto entername
 
 :: :next1
-:: echo INVESTIGATOR : %input1% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+:: echo INVESTIGATOR : %input1% >> %results%
 
 :enterfile
 set /p "input2=Enter your File #: "
@@ -57,7 +61,7 @@ echo.
    if /i "%answer2:~,1%" EQU "n" goto enterfile
 
 :: :next2
-:: echo FILE NUMBER #: %input2% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+:: echo FILE NUMBER #: %input2% >> %results%
 
 :currentdt
 set datetime=%date:~4,10%-%time: =0%
@@ -77,7 +81,7 @@ echo.
    if /i "%answer3:~,1%" EQU "n" goto enterdate
 
 :: :next3
-:: echo CORRECT DATE: %input3% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+:: echo CORRECT DATE: %input3% >> %results%
 
 :entertime
 set /p "input4=Enter current correct time (HH:MM): "
@@ -89,7 +93,7 @@ echo.
    if /i "%answer4:~,1%" EQU "n" goto entertime
 
 :: :next4
-:: echo CORRECT TIME: %input4% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+:: echo CORRECT TIME: %input4% >> %results%
 
 :enterexhibit
 set /p "input5=Enter descriptive info about this Exhibit: "
@@ -103,12 +107,13 @@ echo.
    
 :startoutput
 mkdir %workingdir%\%outputfolder%
-echo INVESTIGATOR: %input1% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo FILE NUMBER : %input2% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo CURRENT TIME: %datetime% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo CORRECT DATE: %input3% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo CORRECT TIME: %input4% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo EXHIBIT INFO: %input5% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+echo INVESTIGATOR: %input1% >> %results%
+echo FILE NUMBER : %input2% >> %results%
+echo CURRENT TIME: %datetime% >> %results%
+echo CORRECT DATE: %input3% >> %results%
+echo CORRECT TIME: %input4% >> %results%
+echo EXHIBIT INFO: %input5% >> %results%
+echo TIMEZONE: %tzcheck% >> %results%
 goto startprocess
 
 :startprocess
@@ -116,235 +121,239 @@ set BORDER===============================================================
 
 echo Getting:
 echo -	current system date and time
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======CURRENT SYSTEM DATE/TIME AND TIMEZONE=================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		echo %date% %time: =0% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		reg query "hklm\system\currentcontrolset\control\timezoneinformation" | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic timezone get bias,caption,daylightbias,daylightname /format:list| findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic os get currenttimezone /format:list | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======CURRENT SYSTEM DATE/TIME AND TIMEZONE=================== >> %results%
+	echo %BORDER% >> %results%
+	echo. >> %results%
+		echo %date% %time: =0% >> %results%
+		echo. >> %results%
+		reg query "hklm\system\currentcontrolset\control\timezoneinformation" | findstr /r /v "^$" >> %results%
+		echo. >> %results%
+		wmic timezone get bias,caption,daylightbias,daylightname /format:list| findstr /r /v "^$" >> %results%
+		wmic os get currenttimezone /format:list | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	current user
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======CURRENT USER============================================ >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		whoami >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======CURRENT USER============================================ >> %results%
+	echo %BORDER% >> %results%
+		whoami >> %results%
+	echo. >> %results%
 
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======ALL USER ACCOUNTS======================================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic useraccount get caption,domain,fullname,name,SID /format:table | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net user | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======ALL USER ACCOUNTS======================================= >> %results%
+	echo %BORDER% >> %results%
+		wmic useraccount get caption,domain,fullname,name,SID /format:table | findstr /r /v "^$" >> %results%
+		net user | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	account policies
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======CURRENT USER ACCOUNT POLICIES=========================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net accounts | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======CURRENT USER ACCOUNT POLICIES=========================== >> %results%
+	echo %BORDER% >> %results%
+		net accounts | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	list of groups on the computer
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======LIST OF GROUPS ON COMPUTER============================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net localgroup | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======LIST OF GROUPS ON COMPUTER============================== >> %results%
+	echo %BORDER% >> %results%
+		net localgroup | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	basic system information
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======BASIC SYSTEM INFORMATION================================ >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		systeminfo >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======BASIC SYSTEM INFORMATION================================ >> %results%
+	echo %BORDER% >> %results%
+		systeminfo >> %results%
+	echo. >> %results%
 
 echo -	BIOS information
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======BIOS INFORMATION======================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic bios get BIOSVersion,Caption,Description,Manufacturer,ReleaseDate,SerialNumber,Version /format:list | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======BIOS INFORMATION======================================== >> %results%
+	echo %BORDER% >> %results%
+		wmic bios get BIOSVersion,Caption,Description,Manufacturer,ReleaseDate,SerialNumber,Version /format:list | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	local physical disk configuration details
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======PHYSICAL DISK INFORMATION=============================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic diskdrive get BytesPerSector,CapabilityDescriptions,Caption,DeviceID,FirmwareRevision,Index,InstallDate,InterfaceType,Manufacturer,MediaType,Model,Name,Partitions,PNPDeviceID,SerialNumber,Size /format:list | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======PHYSICAL DISK INFORMATION=============================== >> %results%
+	echo %BORDER% >> %results%
+		wmic diskdrive get BytesPerSector,CapabilityDescriptions,Caption,DeviceID,FirmwareRevision,Index,InstallDate,InterfaceType,Manufacturer,MediaType,Model,Name,Partitions,PNPDeviceID,SerialNumber,Size /format:list | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	local logical disk configuration details
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======LOGICAL DISK INFORMATION================================ >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic logicaldisk get Caption,Compressed,Description,DeviceID,DriveType,FileSystem,FreeSpace,Name,Size,VolumeName,VolumeSerialNumber /format:list | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======LOGICAL DISK INFORMATION================================ >> %results%
+	echo %BORDER% >> %results%
+		wmic logicaldisk get Caption,Compressed,Description,DeviceID,DriveType,FileSystem,FreeSpace,Name,Size,VolumeName,VolumeSerialNumber /format:list | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	partition details
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======PARTITION INFORMATION=================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic partition get BlockSize,Caption,Description,DeviceID,DiskIndex,Name,Size,StartingOffset,SystemName,Type /format:list | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======PARTITION INFORMATION=================================== >> %results%
+	echo %BORDER% >> %results%
+		wmic partition get BlockSize,Caption,Description,DeviceID,DiskIndex,Name,Size,StartingOffset,SystemName,Type /format:list | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	volume details
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======VOLUME INFORMATION====================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic volume get BlockSize,Capacity,Caption,DeviceID,DriveLetter,FileSystem,FreeSpace,Label,Name,SerialNumber,SystemVolume /format:table | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		mountvol | findstr "\ *" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======VOLUME INFORMATION====================================== >> %results%
+	echo %BORDER% >> %results%
+		wmic volume get BlockSize,Capacity,Caption,DeviceID,DriveLetter,FileSystem,FreeSpace,Label,Name,SerialNumber,SystemVolume /format:table | findstr /r /v "^$" >> %results%
+		mountvol | findstr "\ *" >> %results%
+	echo. >> %results%
 
 echo -	shadow copy details
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======SHADOW COPY DETAILS===================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic shadowcopy get Caption,Description,DeviceObject,ID,InstallDate,OriginatingMachine,ProviderID,SetID,VolumeName /format:list | findstr /r /v "^$"  >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======SHADOW COPY DETAILS===================================== >> %results%
+	echo %BORDER% >> %results%
+		wmic shadowcopy get Caption,Description,DeviceObject,ID,InstallDate,OriginatingMachine,ProviderID,SetID,VolumeName /format:list | findstr /r /v "^$"  >> %results%
+	echo. >> %results%
 
 echo -	last system boot time
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======LAST TIME SYSTEM WAS BOOTED============================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic os get lastbootuptime | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======LAST TIME SYSTEM WAS BOOTED============================= >> %results%
+	echo %BORDER% >> %results%
+		wmic os get lastbootuptime | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	startup info
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======STARTUP INFORMATION===================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic startup get * /format:list | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======STARTUP INFORMATION===================================== >> %results%
+	echo %BORDER% >> %results%
+		wmic startup get * /format:list | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	network information including wireless
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======NETWORK INFORMATION===================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		ipconfig /all >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic nicconfig get description,IPAddress,MACaddress | findstr /I /C:":" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======WIRELESS NETWORK INFO=================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		netsh wlan show profiles >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		netsh wlan show profiles * key=clear >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		echo Looking for XML files in "C:\ProgramData\Microsoft\Wlansvc" and copying info >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ 1>> %workingdir%\%outputfolder%\Acquisition_Results.txt 2>>&1
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======NETWORK INFORMATION===================================== >> %results%
+	echo %BORDER% >> %results%
+	echo. >> %results%
+		ipconfig /all >> %results%
+		wmic nicconfig get description,IPAddress,MACaddress | findstr /I /C:":" >> %results%
+	echo. >> %results%
+	echo ======WIRELESS NETWORK INFO=================================== >> %results%
+		netsh wlan show profiles >> %results%
+		netsh wlan show profiles * key=clear >> %results%
+		echo Looking for XML files in "C:\ProgramData\Microsoft\Wlansvc" and copying info >> %results%
+		findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results%
+		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ 1>> %results% 2>>&1
+		netsh wlan show wirelesscapabilities >> %results%
+		netsh wlan show interfaces >> %results%
+		mkdir %wlanreport%
+		netsh wlan show wlanreport 2>>&1 && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 2>>&1
+	echo. >> %results%
 
 echo -	DNS information
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======DNS INFORMATION========================================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		ipconfig /displaydns >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======DNS INFORMATION========================================= >> %results%
+	echo %BORDER% >> %results%
+		ipconfig /displaydns >> %results%
+	echo. >> %results%
 
 echo -	routing information
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======NETWORK ROUTING INFORMATION============================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		route print >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======NETWORK ROUTING INFORMATION============================= >> %results%
+	echo %BORDER% >> %results%
+		route print >> %results%
+	echo. >> %results%
 
 echo -	ARP information
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======ARP INFORMATION========================================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		arp -a >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======ARP INFORMATION========================================= >> %results%
+	echo %BORDER% >> %results%
+		arp -a >> %results%
+	echo. >> %results%
 
 echo -	current users logged on remotely
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======CURRENT USERS LOGGED ON REMOTELY======================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net sessions >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======CURRENT USERS LOGGED ON REMOTELY======================== >> %results%
+	echo %BORDER% >> %results%
+		net sessions >> %results%
+	echo. >> %results%
 
 echo -	shares on the system
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======SHARES ON THE SYSTEM==================================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net share | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======SHARES ON THE SYSTEM==================================== >> %results%
+	echo %BORDER% >> %results%
+		net share | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	current drive mappings to a remote computer
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT============= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net use | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT============= >> %results%
+	echo %BORDER% >> %results%
+		net use | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 :: echo 	cached drive mappings to a remote computer
-:: echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-:: echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CACHED============== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-:: echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-:: net view /cache >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-:: wmic netuse list full >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-:: echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+:: echo %BORDER% >> %results%
+:: echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CACHED============== >> %results%
+:: echo %BORDER% >> %results%
+:: net view /cache >> %results%
+:: wmic netuse list full >> %results%
+:: echo. >> %results%
 
 echo -	current network connections (detailed)
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======CURRENT NETWORK CONNECTIONS (DETAILED)================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		netstat -anbo >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======CURRENT NETWORK CONNECTIONS (DETAILED)================== >> %results%
+	echo %BORDER% >> %results%
+		netstat -anbo >> %results%
+	echo. >> %results%
 
 echo -	firewall status
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======FIREWALL STATUS========================================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		netsh advfirewall show allprofiles >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======FIREWALL STATUS========================================= >> %results%
+	echo %BORDER% >> %results%
+		netsh advfirewall show allprofiles >> %results%
 		if exist %systemroot%\system32\LogFiles\Firewall\pfirewall.log ( 
 			type %systemroot%\system32\LogFiles\Firewall\pfirewall.log >> %workingdir%\%outputfolder%\pfirewall.log 
-		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo. >> %results%
 
 echo -	currently running services
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======SERVICES CURRENTLY RUNNING ON THE PC==================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		net start >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		wmic service get Name,PathName,ServiceType,StartMode /format:table | find /V "" | findstr /r /v "^$" >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======SERVICES CURRENTLY RUNNING ON THE PC==================== >> %results%
+	echo %BORDER% >> %results%
+		net start >> %results%
+		wmic service get Name,PathName,ServiceType,StartMode /format:table | find /V "" | findstr /r /v "^$" >> %results%
+	echo. >> %results%
 
 echo -	running processes
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======RUNNING PROCESSES (DETAILED)============================ >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		tasklist /v >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======RUNNING PROCESSES (DETAILED)============================ >> %results%
+	echo %BORDER% >> %results%
+		tasklist /v >> %results%
+	echo. >> %results%
 
 echo -	scheduled tasks
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======SCHEDULED TASKS========================================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		schtasks /query /FO LIST /V >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======SCHEDULED TASKS========================================= >> %results%
+	echo %BORDER% >> %results%
+		schtasks /query /FO LIST /V >> %results%
+	echo. >> %results%
 
 echo -	contents of Prefetch
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======PREFETCH CONTENTS======================================= >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======PREFETCH CONTENTS======================================= >> %results%
+	echo %BORDER% >> %results%
+		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %results%
+	echo. >> %results%
 
 echo -	SAM and SYSTEM hives for hash extraction
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo ======SAM and SYSTEM HIVES EXTRACTED========================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-	echo. >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+	echo %BORDER% >> %results%
+	echo ======SAM and SYSTEM HIVES EXTRACTED========================== >> %results%
+	echo %BORDER% >> %results%
+		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %results%
+		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %results%
+	echo. >> %results%
 
-echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo ======END OF EVIDENCE COLLECTION============================== >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo %BORDER% >> %workingdir%\%outputfolder%\Acquisition_Results.txt
-echo COMPLETED AT: %date% %time: =0% SYSTEMTIME >> %workingdir%\%outputfolder%\Acquisition_Results.txt
+echo %BORDER% >> %results%
+echo ======END OF EVIDENCE COLLECTION============================== >> %results%
+echo %BORDER% >> %results%
+echo COMPLETED AT: %date% %time: =0% SYSTEMTIME >> %results%
 echo ===DONE===
 endlocal
 timeout 5
