@@ -23,16 +23,16 @@ set min=%fulltime:~3,2%
 set sec=%fulltime:~6,2%
 set outputfolder=%year%%month%%day%-%hour%%min%%sec%
 set wlanreport=%workingdir%\%outputfolder%\wlan-report
-for /f "tokens=*" %a in ('tzutil /g') do set tzcheck=%a
-set results=%results%
+for /f "tokens=*" %%a in ('tzutil /g') do set tzcheck=%%a
+set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
 goto admin
 :admin
     net session >nul 2>&1
     if %errorLevel% == 0 (
 		goto cwd
     ) else (
-        echo This script requires administrator privileges. Run as admin, and try again. Exiting
-		timeout 5
+        echo This script requires administrator privileges. Run as admin, and try again. Exiting.
+		echo Error %ERRORLEVEL%
 		EXIT /B %ERRORLEVEL%
 )
 :cwd
@@ -44,7 +44,7 @@ goto entername
 :entername
 set /p "input1=Enter your name and title: "
 echo.
-set /p "answer1=You entered %input1%, is this correct (Y/n)? "
+set /p "answer1=You entered %input1%, is this correct [Y]/n: "
 echo.
    if /i "%answer1:~,1%" EQU "y" goto enterfile
    if /i "%answer1%" EQU "" goto enterfile
@@ -53,24 +53,24 @@ echo.
 :enterfile
 set /p "input2=Enter your File #: "
 echo.
-set /p "answer2=You entered %input2%, is this correct (Y/n)? "
+set /p "answer2=You entered %input2%, is this correct [Y]/n: "
 echo.
    if /i "%answer2:~,1%" EQU "y" goto currentdt
    if /i "%answer2%" EQU "" goto currentdt
    if /i "%answer2:~,1%" EQU "n" goto enterfile
 
 :currentdt
-set datetime=%date:~4,10%-%time: =0%
-set /p "answerdt=Current System Date/Time is %datetime%. Is this correct (Y/n)? "
+set datetime=%date:~4,10% %time: =0% %tzcheck%
+set /p "answerdt=Date/Time on this system is %datetime%, is this correct [Y]/n: "
 echo.
    if /i "%answerdt:~,1%" EQU "y" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
    if /i "%answerdt%" EQU "" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
-   if /i "%answerdt:~,1%" EQU "n" set datetime=NOT ACCURATE && goto enterdate
+   if /i "%answerdt:~,1%" EQU "n" set "datetime=NOT ACCURATE" && goto enterdate
 
 :enterdate
 set /p "input3=Enter current correct date (yyyy-mm-dd): "
 echo.
-set /p "answer3=You entered %input3%, is this correct (Y/n)? "
+set /p "answer3=You entered %input3%, is this correct [Y]/n: "
 echo.
    if /i "%answer3:~,1%" EQU "y" goto entertime
    if /i "%answer3%" EQU "" goto entertime
@@ -79,7 +79,7 @@ echo.
 :entertime
 set /p "input4=Enter current correct time (HH:MM): "
 echo.
-set /p "answer4=You entered %input4%, is this correct (Y/n)? "
+set /p "answer4=You entered %input4%, is this correct [Y]/n: "
 echo.
    if /i "%answer4:~,1%" EQU "y" goto enterexhibit
    if /i "%answer4%" EQU "" goto enterexhibit
@@ -88,7 +88,7 @@ echo.
 :enterexhibit
 set /p "input5=Enter descriptive info about this Exhibit: "
 echo.
-set /p "answer5=You entered %input5%, is this correct (Y/n)? "
+set /p "answer5=You entered %input5%, is this correct [Y]/n: "
 echo.
    if /i "%answer5:~,1%" EQU "y" goto startoutput
    if /i "%answer5%" EQU "" goto startoutput
@@ -102,7 +102,7 @@ echo FILE NUMBER : %input2% >> %results%
 echo CURRENT TIME: %datetime% >> %results%
 echo CORRECT DATE: %input3% >> %results%
 echo CORRECT TIME: %input4% >> %results%
-echo TIMEZONE: %tzcheck% >> %results%
+echo TIMEZONE    : %tzcheck% >> %results%
 echo EXHIBIT INFO: %input5% >> %results%
 goto startprocess
 
@@ -226,13 +226,15 @@ echo -	network information including wireless
 	echo ======WIRELESS NETWORK INFO=================================== >> %results%
 		netsh wlan show profiles >> %results%
 		netsh wlan show profiles * key=clear >> %results%
-		echo Looking for XML files in "C:\ProgramData\Microsoft\Wlansvc" and copying info >> %results%
-		findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results%
-		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ 1>> %results% 2>>&1
+		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
+		echo Looking for XML files in %wlansvc% and copying info >> %results%
+		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results% || (@echo No XML profiles found. >> %results%)
+		::findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul
+		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ >> %results% 1>nul
 		netsh wlan show wirelesscapabilities >> %results%
 		netsh wlan show interfaces >> %results%
 		mkdir %wlanreport%
-		netsh wlan show wlanreport 2>>&1 && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 2>>&1
+		netsh wlan show wlanreport 1>nul && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 1>nul
 	echo. >> %results%
 
 echo -	DNS information
@@ -275,7 +277,7 @@ echo -	current drive mappings to a remote computer
 	echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT============= >> %results%
 	echo %BORDER% >> %results%
 		net use | findstr /r /v "^$" >> %results%
-		wmic netuse list full >> %results%
+		wmic netuse list full 1>nul >> %results%
 	echo. >> %results%
 
 echo -	current network connections (detailed)
@@ -291,7 +293,7 @@ echo -	firewall status
 	echo %BORDER% >> %results%
 		netsh advfirewall show allprofiles >> %results%
 		if exist %systemroot%\system32\LogFiles\Firewall\pfirewall.log ( 
-			type %systemroot%\system32\LogFiles\Firewall\pfirewall.log >> %workingdir%\%outputfolder%\pfirewall.log 
+			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %workingdir%\%outputfolder%\ 1>nul
 		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
 	echo. >> %results%
@@ -325,12 +327,13 @@ echo -	contents of Prefetch
 		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %results%
 	echo. >> %results%
 
-echo -	SAM and SYSTEM hives for hash extraction
+echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
 	echo %BORDER% >> %results%
-	echo ======SAM and SYSTEM HIVES EXTRACTED========================== >> %results%
+	echo ======SAM, SYSTEM and SECURITY HIVE EXTRACTION================ >> %results%
 	echo %BORDER% >> %results%
 		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %results%
 		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %results%
+		reg save hklm\security %workingdir%\%outputfolder%\security_%outputfolder% >> %results%
 	echo. >> %results%
 
 echo %BORDER% >> %results%
@@ -338,5 +341,6 @@ echo ======END OF EVIDENCE COLLECTION============================== >> %results%
 echo %BORDER% >> %results%
 echo COMPLETED AT: %date% %time: =0% SYSTEMTIME >> %results%
 echo ===DONE===
+echo.
 endlocal
-timeout 5
+EXIT /B
