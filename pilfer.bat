@@ -15,16 +15,12 @@
 setlocal
 set fulltime=%time: =0%
 set workingdir=%~dp0
-set year=%date:~-4%
-set month=%date:~4,2%
-set day=%date:~7,2%
+set fulldate=%date: =0%
 set hour=%fulltime:~0,2%
 set min=%fulltime:~3,2%
 set sec=%fulltime:~6,2%
-set outputfolder=%year%%month%%day%-%hour%%min%%sec%
-set wlanreport=%workingdir%\%outputfolder%\wlan-report
 for /f "tokens=*" %%a in ('tzutil /g') do set tzcheck=%%a
-set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
+
 goto admin
 :admin
     net session >nul 2>&1
@@ -60,7 +56,7 @@ echo.
    if /i "%answer2:~,1%" EQU "n" goto enterfile
 
 :currentdt
-set datetime=%date:~4,10% %time: =0% %tzcheck%
+set datetime=%fulldate% %fulltime% %tzcheck%
 set /p "answerdt=Date/Time on this system is %datetime%, is this correct [Y]/n: "
 echo.
    if /i "%answerdt:~,1%" EQU "y" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
@@ -72,8 +68,8 @@ set /p "input3=Enter current correct date (yyyy-mm-dd): "
 echo.
 set /p "answer3=You entered %input3%, is this correct [Y]/n: "
 echo.
-   if /i "%answer3:~,1%" EQU "y" goto entertime
-   if /i "%answer3%" EQU "" goto entertime
+   if /i "%answer3:~,1%" EQU "y" set "fulldate=%input3%" && goto entertime
+   if /i "%answer3%" EQU "" set "fulldate=%input3%" && goto entertime
    if /i "%answer3:~,1%" EQU "n" goto enterdate
 
 :entertime
@@ -81,8 +77,8 @@ set /p "input4=Enter current correct time (HH:MM): "
 echo.
 set /p "answer4=You entered %input4%, is this correct [Y]/n: "
 echo.
-   if /i "%answer4:~,1%" EQU "y" goto enterexhibit
-   if /i "%answer4%" EQU "" goto enterexhibit
+   if /i "%answer4:~,1%" EQU "y" set "fulltime=%input4%" && goto enterexhibit
+   if /i "%answer4%" EQU "" set "fulltime=%input4%" && goto enterexhibit
    if /i "%answer4:~,1%" EQU "n" goto entertime
 
 :enterexhibit
@@ -96,17 +92,24 @@ echo.
 
    
 :startoutput
+set outputfolder=%fulldate%-%fulltime:~0,2%-%fulltime:~3,2%
+set wlanreport=%workingdir%\%outputfolder%\wlan-report
+set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
+echo 1
+echo %workingdir% %outputfolder%
 mkdir %workingdir%\%outputfolder%
+echo 2
 echo INVESTIGATOR: %input1% >> %results%
 echo FILE NUMBER : %input2% >> %results%
-echo CURRENT TIME: %datetime% >> %results%
-echo CORRECT DATE: %input3% >> %results%
-echo CORRECT TIME: %input4% >> %results%
+echo SYSTEM TIME: %datetime% >> %results%
+echo CORRECT DATE: %fulldate% >> %results%
+echo CORRECT TIME: %fulltime% >> %results%
 echo TIMEZONE    : %tzcheck% >> %results%
 echo EXHIBIT INFO: %input5% >> %results%
 goto startprocess
 
 :startprocess
+
 set BORDER===============================================================
 
 echo Getting:
@@ -230,11 +233,11 @@ echo -	network information including wireless
 		echo Looking for XML files in %wlansvc% and copying info >> %results%
 		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results% || (@echo No XML profiles found. >> %results%)
 		::findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul
-		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ >> %results% 1>nul
+		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ >> %results% 
 		netsh wlan show wirelesscapabilities >> %results%
 		netsh wlan show interfaces >> %results%
 		mkdir %wlanreport%
-		netsh wlan show wlanreport 1>nul && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 1>nul
+		netsh wlan show wlanreport && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 
 	echo. >> %results%
 
 echo -	DNS information
