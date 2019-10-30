@@ -8,9 +8,9 @@
 :: ** (right click and select "Run as administrator") especially for netstat details.
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Sgt. Corey Forman - 2019-10-26 *******************************
+:: ** Ongoing maintenance: Sgt. Corey Forman - 2019-10-30 *******************************
 :: **************************************************************************************
-:: ** Version 1.5 ***********************************************************************
+:: ** Version 1.6 ***********************************************************************
 
 setlocal
 set fulltime=%time: =0%
@@ -29,6 +29,7 @@ goto admin
     ) else (
         echo This script requires administrator privileges. Run as admin, and try again. Exiting.
 		echo Error %ERRORLEVEL%
+		PAUSE
 		EXIT /B %ERRORLEVEL%
 )
 :cwd
@@ -95,16 +96,13 @@ echo.
 set outputfolder=%fulldate%-%fulltime:~0,2%-%fulltime:~3,2%
 set wlanreport=%workingdir%\%outputfolder%\wlan-report
 set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
-echo 1
-echo %workingdir% %outputfolder%
 mkdir %workingdir%\%outputfolder%
-echo 2
 echo INVESTIGATOR: %input1% >> %results%
 echo FILE NUMBER : %input2% >> %results%
-echo SYSTEM TIME: %datetime% >> %results%
+echo SYSTEM TIME : %datetime% >> %results%
 echo CORRECT DATE: %fulldate% >> %results%
 echo CORRECT TIME: %fulltime% >> %results%
-echo TIMEZONE    : %tzcheck% >> %results%
+echo SYSTEM TZ   : %tzcheck% >> %results%
 echo EXHIBIT INFO: %input5% >> %results%
 goto startprocess
 
@@ -231,13 +229,11 @@ echo -	network information including wireless
 		netsh wlan show profiles * key=clear >> %results%
 		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
 		echo Looking for XML files in %wlansvc% and copying info >> %results%
-		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results% || (@echo No XML profiles found. >> %results%)
-		::findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul
-		for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\ >> %results% 
-		netsh wlan show wirelesscapabilities >> %results%
-		netsh wlan show interfaces >> %results%
+		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
+		netsh wlan show wirelesscapabilities >> %results% 1>nul
+		netsh wlan show interfaces >> %results% 1>nul
 		mkdir %wlanreport%
-		netsh wlan show wlanreport && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 
+		netsh wlan show wlanreport 1>nul && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 1>nul
 	echo. >> %results%
 
 echo -	DNS information
