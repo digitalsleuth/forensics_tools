@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from argparse import ArgumentParser
 import sys
 import geoip2.database
@@ -22,7 +22,7 @@ def createMap(infile, dbfile):
 if __name__ == "__main__":
     arg_parse = ArgumentParser(description="GeoIP Map creation")
     arg_parse.add_argument("-i", metavar="<input_file>", help="Input file containing IP's on individual lines", required=True)
-    arg_parse.add_argument("-d", metavar="<database>", help="GeoIP MMDB file", required=True)
+    arg_parse.add_argument("-d", metavar="<database>", help="GeoIP MMDB file", default="GeoLite2-City.mmdb")
     args = arg_parse.parse_args()
     
     try:
