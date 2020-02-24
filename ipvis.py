@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
+
+"""
+This script will ingest a text file with IP addresses (one per line) and present
+a GeoLite2 City map for geolocation. Requires the GeoLite2-City.mmdb file. 
+Without the -d option, will assume the DB is in the current directory with this script.
+With the -d option, you can specify the location of the DB.
+"""
 from argparse import ArgumentParser
 import sys
 import geoip2.database
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 import folium
+
+__author__ = 'Corey Forman'
+__date__ = '23 Feb 2020'
+__version__ = '1.1'
+__description__ = 'IP address Geolocation visualization tool'
 
 def createMap(infile, dbfile):
     reader = geoip2.database.Reader(dbfile)
@@ -20,9 +32,10 @@ def createMap(infile, dbfile):
     print("[*] Finished creating map!")
         
 if __name__ == "__main__":
-    arg_parse = ArgumentParser(description="GeoIP Map creation")
+    arg_parse = ArgumentParser(description="GeoIP Map creation", epilog="This script will generate a geolocation IP visualization map")
     arg_parse.add_argument("-i", metavar="<input_file>", help="Input file containing IP's on individual lines", required=True)
     arg_parse.add_argument("-d", metavar="<database>", help="GeoIP MMDB file", default="GeoLite2-City.mmdb")
+    arg_parse.add_argument("-v", action="version", version='%(prog)s' + ' v' + str(__version__))
     args = arg_parse.parse_args()
     
     try:
