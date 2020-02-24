@@ -15,21 +15,25 @@ import folium
 
 __author__ = 'Corey Forman'
 __date__ = '23 Feb 2020'
-__version__ = '1.1'
+__version__ = '1.2'
 __description__ = 'IP address Geolocation visualization tool'
 
 def createMap(infile, dbfile):
-    reader = geoip2.database.Reader(dbfile)
-    ip_addresses = open(infile, 'r+').read().splitlines()
-    ip_map = folium.Map()
-    for ip_address in ip_addresses:
-        record = reader.city(ip_address)
-        if record.location.latitude:
-            popup = folium.Popup(ip_address)
-            marker = folium.Marker([record.location.latitude,record.location.longitude],popup=popup)
-            ip_map.add_child(marker)
-    ip_map.save("index.html")
-    print("[*] Finished creating map!")
+    try:
+        reader = geoip2.database.Reader(dbfile)
+        ip_addresses = open(infile, 'r+').read().splitlines()
+        ip_map = folium.Map()
+        for ip_address in ip_addresses:
+            record = reader.city(ip_address)
+            if record.location.latitude:
+                popup = folium.Popup(ip_address)
+                marker = folium.Marker([record.location.latitude,record.location.longitude],popup=popup)
+                ip_map.add_child(marker)
+        ip_map.save("index.html")
+        print("[*] Finished creating map!")
+    except IOError as e:
+        print("Unable to create map: %s" % (e), file=sys.stderr)
+        raise SystemExit(1)
         
 if __name__ == "__main__":
     arg_parse = ArgumentParser(description="GeoIP Map creation", epilog="This script will generate a geolocation IP visualization map")
@@ -41,6 +45,6 @@ if __name__ == "__main__":
     try:
         createMap(args.i, args.d)
     except IOError as e:
-        print("Unable to read '%s': %s" % (args.i, e), file==sys.stderr)
+        print("Unable to open file: %s" % (e), file=sys.stderr)
         raise SystemExit(1)
     
