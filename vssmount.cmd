@@ -5,12 +5,12 @@
 :: ** Arsenal Image Mounter will allow the shadow copies to (most recent successful test 3.0.79)
 :: ** be seen.
 :: ** Feel free to modify this script as you see fit.
-:: ** Source: https://github.com/fetchered/forensics_tools
-:: ** Last Update: 2019-10-27 Corey Forman
+:: ** Source: https://github.com/digitalsleuth/forensics_tools
+:: ** Last Update: 2020-09-04 Corey Forman
 :: ***********************************************************************************************
 
 setlocal
-set version=1.5
+set version=1.6
 @title vssmount v%version%
 goto admin
 :admin
@@ -24,7 +24,7 @@ goto admin
     )
 :start
 ECHO Volume Shadow Copy Mount Tool - v%version%
-ECHO https://github.com/fetchered/forensics_tools
+ECHO https://github.com/digitalsleuth/forensics_tools
 ECHO.
 ECHO ------------------------------------------------------------------
 ECHO This tool will allow you to mount all Volume Shadow Copies
