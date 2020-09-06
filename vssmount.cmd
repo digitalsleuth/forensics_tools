@@ -8,7 +8,7 @@
 :: ** Source: https://github.com/digitalsleuth/forensics_tools
 :: ** Last Update: 2020-09-06 Corey Forman
 :: ***********************************************************************************************
-MODE con:cols=120 lines=40
+MODE con:cols=120
 setlocal
 set version=1.8
 @title vssmount v%version%
@@ -20,6 +20,7 @@ goto admin
         goto start
     ) else (
         echo This script requires administrator privileges. Run as admin, and try again. Exiting...
+		TIMEOUT 5
 		EXIT /B %ERRORLEVEL%
     )
 :start
@@ -108,6 +109,7 @@ goto domount
 :: In the event there is only one VSC of interest, choose the one you want.
 @echo Choose folder to use as MountPoint. If the folder does not exist, it will be created.
 set /p fullpath="Folder: "
+vssadmin list shadows | findstr "Originating creation GLOBALROOT Volume"
 @echo Identify only the # of the volume you wish to mount.
 set /p i_vscnum="VSC #: "
 set vscfolder=HarddiskVolumeShadowCopy%i_vscnum%
@@ -192,4 +194,5 @@ set "fullpath="
 endlocal
 title Command Prompt
 exit /b
+
 
