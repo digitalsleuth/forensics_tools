@@ -10,7 +10,7 @@
 :: ***********************************************************************************************
 MODE con:cols=120
 setlocal
-set version=1.8
+set version=1.9
 @title vssmount v%version%
 goto admin
 :admin
@@ -110,8 +110,29 @@ goto domount
 @echo Choose folder to use as MountPoint. If the folder does not exist, it will be created.
 set /p fullpath="Folder: "
 vssadmin list shadows | findstr "Originating creation GLOBALROOT Volume"
+goto choose_mount
+
+:choose_mount
 @echo Identify only the # of the volume you wish to mount.
 set /p i_vscnum="VSC #: "
+set /a isnum=i_vscnum
+if %isnum% EQU %i_vscnum% (
+    if %i_vscnum% GTR 0 (
+	goto continue_mount
+	) 
+	if %i_vscnum% EQU 0 (
+	goto continue_mount
+	)
+	if %i_vscnum% LSS 0 (
+	@echo That was not a valid number, please try again.
+	goto choose_mount 
+	)
+) else (
+@echo That was not a valid number, please try again.
+goto choose_mount
+)
+
+:continue_mount
 set vscfolder=HarddiskVolumeShadowCopy%i_vscnum%
 ECHO.
 :: The following will determine if the folder and mountpoint already exist, and decide what happens from there.
