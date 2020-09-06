@@ -26,23 +26,24 @@ goto admin
 ECHO Volume Shadow Copy Mount Tool - v%version%
 ECHO https://github.com/digitalsleuth/forensics_tools
 ECHO.
-ECHO -------------------------------------------------------------------
-ECHO This tool will allow you to mount all Volume Shadow Copies
-ECHO for all drives which are mounted and contain Volume Shadow Copies.
-ECHO If wanting to mount VSC's from another disk or forensic image, 
-ECHO Arsenal Image Mounter will allow the shadow copies to be seen.
+ECHO -----------------------------------------------------------------------------------------------------------
+ECHO This tool will allow you to mount all Volume Shadow Copies for all drives which are mounted and contain 
+ECHO Volume Shadow Copies. If you want to mount VSC's from another disk or forensic image, Arsenal Image 
+ECHO Mounter will allow the shadow copies to be seen. 
 ECHO NOTE: Disk/Image must be mounted in 'Write temporary' mode.
 ECHO.
-ECHO If you are looking to use this tool to capture locked files,
-ECHO you may want to create a VSC before using this tool to capture
-ECHO the most recent files. 
-ECHO To do this in Windows Servers 2008/12/16, run the following from
-ECHO an Administrator Command Prompt / PowerShell Terminal:
-ECHO vssadmin create shadow /for=c: (or the volume of your choice).
-ECHO To do this in Windows 7/8/8.1/10, run the following from an
-ECHO Administrator Command Prompt / PowerShell Terminal:
-ECHO wmic shadowcopy call create Volume=C:\ (requires proper case and \)
-ECHO -------------------------------------------------------------------
+ECHO If you are looking to use this tool to capture locked files, you may want to create a VSC before using this
+ECHO tool to capture the most recent files. 
+ECHO.
+ECHO To do this in Windows Servers 2008/12/16, run the following from an Administrator Command Prompt / 
+ECHO PowerShell Terminal:
+ECHO vssadmin create shadow /for=c: (or the volume of your choice)
+ECHO.
+ECHO To do this in Windows 7/8/8.1/10, run the following from an Administrator Command Prompt / 
+ECHO PowerShell Terminal:
+ECHO wmic shadowcopy call create Volume=C:\ (requires proper case and the SLASH at the end)
+ECHO You can run vssadmin list volumes to get the correct volume identifier/path.
+ECHO -----------------------------------------------------------------------------------------------------------
 ECHO.
 ECHO [L] - List available shadow copies
 ECHO.
