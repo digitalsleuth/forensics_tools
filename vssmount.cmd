@@ -6,11 +6,11 @@
 :: ** be seen.
 :: ** Feel free to modify this script as you see fit.
 :: ** Source: https://github.com/digitalsleuth/forensics_tools
-:: ** Last Update: 2020-09-04 Corey Forman
+:: ** Last Update: 2020-09-06 Corey Forman
 :: ***********************************************************************************************
 
 setlocal
-set version=1.6
+set version=1.7
 @title vssmount v%version%
 goto admin
 :admin
@@ -32,6 +32,16 @@ ECHO for all drives which are mounted and contain Volume Shadow Copies.
 ECHO If wanting to mount VSC's from another disk or forensic image, 
 ECHO Arsenal Image Mounter will allow the shadow copies to be seen.
 ECHO NOTE: Disk/Image must be mounted in 'Write temporary' mode.
+ECHO.
+ECHO If you need are looking to use this tool to capture locked files,
+ECHO you may want to create a VSC before using this tool, to capture
+ECHO the most recent files. 
+ECHO To do this in Windows Servers 2008/12/16, run the following from
+ECHO an Administrator Command Prompt / PowerShell Terminal:
+ECHO vssadmin create shadow /for=c: (or the volume of your choice).
+ECHO To do this in Windows 7/8/8.1/10, run the following from an
+ECHO Administrator Command Prompt / PowerShell Terminal:
+ECHO wmic shadowcopy call create Volume=C:\ (requires proper case and \)
 ECHO ------------------------------------------------------------------
 ECHO.
 ECHO [L] - List available shadow copies
