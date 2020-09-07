@@ -10,7 +10,7 @@
 :: ***********************************************************************************************
 MODE con:cols=130
 setlocal
-set version=1.9
+set version=2.0
 @title vssmount v%version%
 goto admin
 :admin
@@ -44,6 +44,14 @@ ECHO To do this in Windows 7/8/8.1/10, run the following from an Administrator C
 ECHO PowerShell Terminal:
 ECHO wmic shadowcopy call create Volume=C:\ (requires proper case and the SLASH at the end)
 ECHO You can run vssadmin list volumes to get the correct volume identifier/path.
+ECHO.
+ECHO If you wish to mount a VSC manually, you can use the following commands:
+ECHO mkdir C:\Windows\Temp\mount_vsc
+ECHO .
+ECHO for /f "tokens=4" %f in ('vssadmin list shadows ^|findstr GLOBALROOT') do ^
+ECHO @for /f "tokens=4 delims=\" %g in ("%f") do @mklink /d C:\Windows\temp\mount_vsc\%g %f\
+ECHO.
+ECHO for /f %f in ('dir /b C:\Windows\Temp\mount_vsc\Hard*') do rmdir C:\Windows\Temp\mount_vsc\%f
 ECHO -----------------------------------------------------------------------------------------------------------
 ECHO.
 ECHO [L] - List available shadow copies
@@ -111,8 +119,13 @@ if %errorlevel% == 0 (
 
 :create_vssadmin
 vssadmin create shadow /for=%driveletter%
-ECHO VSC Created
-goto choose
+if %errorlevel% == 0 (
+  ECHO VSC Created
+  goto choose
+  ) else (
+  ECHO Error creating VSC - Check your input for the correct case and frive letter and try again
+  goto choose
+  )
 
 :mount
 @echo Choose folder to use as MountPoint. If the folder does not exist, it will be created.
