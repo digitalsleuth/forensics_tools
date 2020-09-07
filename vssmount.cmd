@@ -47,11 +47,11 @@ ECHO You can run vssadmin list volumes to get the correct volume identifier/path
 ECHO.
 ECHO If you wish to mount a VSC manually, you can use the following commands:
 ECHO mkdir C:\Windows\Temp\mount_vsc
-ECHO .
-ECHO for /f "tokens=4" %f in ('vssadmin list shadows ^|findstr GLOBALROOT') do ^
-ECHO @for /f "tokens=4 delims=\" %g in ("%f") do @mklink /d C:\Windows\temp\mount_vsc\%g %f\
 ECHO.
-ECHO for /f %f in ('dir /b C:\Windows\Temp\mount_vsc\Hard*') do rmdir C:\Windows\Temp\mount_vsc\%f
+ECHO for /f "tokens=4" %%f in ('vssadmin list shadows ^|findstr GLOBALROOT') do 
+ECHO @for /f "tokens=4 delims=\" %%g in ("%%f") do @mklink /d C:\Windows\temp\mount_vsc\%%g %%f\
+ECHO.
+ECHO for /f %%f in ('dir /b C:\Windows\Temp\mount_vsc\Hard*') do rmdir C:\Windows\Temp\mount_vsc\%%f
 ECHO -----------------------------------------------------------------------------------------------------------
 ECHO.
 ECHO [L] - List available shadow copies
