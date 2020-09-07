@@ -8,7 +8,7 @@
 :: ** Source: https://github.com/digitalsleuth/forensics_tools
 :: ** Last Update: 2020-09-06 Corey Forman
 :: ***********************************************************************************************
-MODE con:cols=120
+MODE con:cols=130
 setlocal
 set version=1.9
 @title vssmount v%version%
@@ -48,6 +48,8 @@ ECHO ---------------------------------------------------------------------------
 ECHO.
 ECHO [L] - List available shadow copies
 ECHO.
+ECHO [C] - Create a VSC
+ECHO.
 ECHO [M] - Mount all detected volumes
 ECHO.
 ECHO [I] - Mount individual volume
@@ -64,9 +66,10 @@ goto choose
 :choose
 :: Present the user a choice
 ECHO.
-set /p choice="VSC Mount Options: [L]ist, [M]ount, [I]ndividual mount, [D]isplay mounted, [S]ingle unmount, [U]nmount all, [Q]uit: "
+set /p choice="VSC Mount Options: [L]ist, [C]reate, [M]ount, [I]ndividual mount, [D]isplay mounted, [S]ingle unmount, [U]nmount all, [Q]uit: "
 if /I "%choice%"=="Q" goto quit
 if /I "%choice%"=="L" goto vsclist
+if /I "%choice%"=="C" goto create
 if /I "%choice%"=="D" goto mounted
 if /I "%choice%"=="M" goto mount
 if /I "%choice%"=="U" goto unmount
@@ -82,6 +85,33 @@ goto choose
 :vsclist
 :: Used to display pertinent information from vssadmin to determine which volume user wants to mount.
 vssadmin list shadows | findstr "Originating creation GLOBALROOT Volume"
+goto choose
+
+:create
+:: Will create a volume shadow copy to potentially capture locked files
+:: Get Version as variable, and if variable equals something, use this command
+vssadmin list volumes | findstr /C:"Volume path"
+set /p driveletter="Choose your drive letter. Make sure it is in the correct case and includes the \: "
+for /f "tokens=2-3" %%i in ('wmic os get Caption ^|findstr Windows') do set version=%%i %%j
+if "%version%" == "Windows 10" goto create_wmic
+if "%version%" == "Windows 8.1" goto create_wmic
+if "%version%" == "Windows 8" goto create_wmic
+if "%version%" == "Windows 7" goto create_wmic
+if "%version%" == "Windows Server" goto create_vssadmin
+if "
+:create_wmic
+wmic shadowcopy call create Volume=%driveletter%
+if %errorlevel% == 0 (
+  ECHO VSC Created
+  goto choose
+  ) else (
+  ECHO Error creating VSC - Check your input for the correct case and \ and try again
+  goto choose
+  )
+
+:create_vssadmin
+vssadmin create shadow /for=%driveletter%
+ECHO VSC Created
 goto choose
 
 :mount
@@ -103,7 +133,12 @@ goto choose
 :: If the folder given at start does not exist, then create it and continue with the mount process.
 @echo Directory does not exist - creating...
 mkdir %fullpath%
-goto domount
+if %errorlevel% == 0 (
+  goto domount
+  ) else (
+  echo Error creating folder - error level %errorlevel%
+  goto choose
+  )
 
 :i_mount
 :: In the event there is only one VSC of interest, choose the one you want.
@@ -118,22 +153,32 @@ set /p i_vscnum="VSC #: "
 set /a isnum=i_vscnum
 if %isnum% EQU %i_vscnum% (
     if %i_vscnum% GTR 0 (
-	goto continue_mount
+	goto verify_mount
 	) 
 	if %i_vscnum% EQU 0 (
-	goto continue_mount
+	@echo That was not a valid option, please try again.
+	goto choose_mount
 	)
 	if %i_vscnum% LSS 0 (
-	@echo That was not a valid number, please try again.
+	@echo That was not a valid option, please try again.
 	goto choose_mount 
 	)
 ) else (
-@echo That was not a valid number, please try again.
+@echo That was not a valid option, please try again.
 goto choose_mount
 )
 
-:continue_mount
+:verify_mount
 set vscfolder=HarddiskVolumeShadowCopy%i_vscnum%
+for /f "tokens=5 delims=\" %%f in ('vssadmin list shadows ^| findstr /C:"HarddiskVolumeShadowCopy"') do (
+  if %vscfolder%==%%f (
+  goto continue_mount
+  )
+)
+ECHO VSC does not exist - try again
+goto choose_mount
+
+:continue_mount
 ECHO.
 :: The following will determine if the folder and mountpoint already exist, and decide what happens from there.
 set mountpoint=%fullpath%\%vscfolder%
