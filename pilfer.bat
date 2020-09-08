@@ -1,7 +1,7 @@
 @echo off
 :: **************************************************************************************
 :: ** PILFER
-:: ** Source: https://github.com/fetchered/forensics_tools
+:: ** Source: https://github.com/digitalsleuth/forensics_tools
 :: ** Batch File to quickly gather basic system info & volatile network info
 :: ** then dump it out to a text file called Acquisition_Results.txt. 
 :: ** Although not critical, it is recommended that it be run with elevated priveleges,
