@@ -8,23 +8,32 @@
 :: ** (right click and select "Run as administrator") especially for netstat details.
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Sgt. Corey Forman - 2019-10-30 *******************************
+:: ** Ongoing maintenance: Sgt. Corey Forman - 2020-09-07 *******************************
 :: **************************************************************************************
-:: ** Version 1.6 ***********************************************************************
+:: ** Version 1.7 ***********************************************************************
 
 setlocal
-set fulltime=%time: =0%
 set workingdir=%~dp0
-set fulldate=%date: =0%
-set hour=%fulltime:~0,2%
-set min=%fulltime:~3,2%
-set sec=%fulltime:~6,2%
+for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
+     set fulldatetime=%%j
+)
 for /f "tokens=*" %%a in ('tzutil /g') do set tzcheck=%%a
+set year=%fulldatetime:~0,4%
+set month=%fulldatetime:~4,2%
+set day=%fulldatetime:~6,2%
+set fulldate=%year%-%month%-%day%
+set hour=%fulldatetime:~8,2%
+set min=%fulldatetime:~10,2%
+set sec=%fulldatetime:~12,2%
+set fulltime=%hour%-%min%-%sec%
+set tzoffset=%fulldatetime:~-5%
+set /A tzoffsethrs=%tzoffset% / 60
 
 goto admin
 :admin
     net session >nul 2>&1
     if %errorLevel% == 0 (
+	    set initiation_time=Acquisition initiated at SYSTEM-TIME: %fulldate% %fulltime% %tzcheck% - Current Offset UTC %tzoffsethrs%
 		goto cwd
     ) else (
         echo This script requires administrator privileges. Run as admin, and try again. Exiting.
@@ -33,6 +42,7 @@ goto admin
 		EXIT /B %ERRORLEVEL%
 )
 :cwd
+echo %initiation_time%
 echo.
 echo Your current working directory is "%workingdir:~0,-1%"
 echo.
@@ -58,7 +68,7 @@ echo.
 
 :currentdt
 set datetime=%fulldate% %fulltime% %tzcheck%
-set /p "answerdt=Date/Time on this system is %datetime%, is this correct [Y]/n: "
+set /p "answerdt=Date/Time on this system when script initiated was %datetime%, is this correct [Y]/n: "
 echo.
    if /i "%answerdt:~,1%" EQU "y" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
    if /i "%answerdt%" EQU "" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
@@ -74,7 +84,7 @@ echo.
    if /i "%answer3:~,1%" EQU "n" goto enterdate
 
 :entertime
-set /p "input4=Enter current correct time (HH:MM): "
+set /p "input4=Enter current correct time (HH-MM-SS): "
 echo.
 set /p "answer4=You entered %input4%, is this correct [Y]/n: "
 echo.
@@ -93,17 +103,19 @@ echo.
 
    
 :startoutput
-set outputfolder=%fulldate%-%fulltime:~0,2%-%fulltime:~3,2%
+set outputfolder=%fulldate%_%fulltime%
 set wlanreport=%workingdir%\%outputfolder%\wlan-report
 set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
 mkdir %workingdir%\%outputfolder%
-echo INVESTIGATOR: %input1% >> %results%
-echo FILE NUMBER : %input2% >> %results%
-echo SYSTEM TIME : %datetime% >> %results%
-echo CORRECT DATE: %fulldate% >> %results%
-echo CORRECT TIME: %fulltime% >> %results%
-echo SYSTEM TZ   : %tzcheck% >> %results%
-echo EXHIBIT INFO: %input5% >> %results%
+echo %initiation_time% >> %results%
+echo INVESTIGATOR  : %input1% >> %results%
+echo FILE NUMBER   : %input2% >> %results%
+echo SYSTEM TIME   : %datetime% >> %results%
+echo CORRECT DATE  : %fulldate% >> %results%
+echo CORRECT TIME  : %fulltime% >> %results%
+echo SYSTEM TZ     : %tzcheck% >> %results%
+echo CURR TZ OFFSET: UTC %tzoffsethrs% >> %results%
+echo EXHIBIT INFO  : %input5% >> %results%
 goto startprocess
 
 :startprocess
