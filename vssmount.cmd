@@ -106,7 +106,7 @@ if "%version%" == "Windows 8.1" goto create_wmic
 if "%version%" == "Windows 8" goto create_wmic
 if "%version%" == "Windows 7" goto create_wmic
 if "%version%" == "Windows Server" goto create_vssadmin
-if "
+
 :create_wmic
 wmic shadowcopy call create Volume=%driveletter%
 if %errorlevel% == 0 (
