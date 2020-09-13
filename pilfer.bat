@@ -104,9 +104,10 @@ echo.
    
 :startoutput
 set outputfolder=%fulldate%_%fulltime%
-set wlanreport=%workingdir%\%outputfolder%\wlan-report
-set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
-mkdir %workingdir%\%outputfolder%
+set acquisition_path="%workingdir%\%outputfolder%"
+set wlanreport=%acquisition_path%\wlan-report
+set results=%acquisition_path%\Acquisition_Results.txt
+mkdir %acquisition_path%
 echo %initiation_time% >> %results%
 echo INVESTIGATOR  : %input1% >> %results%
 echo FILE NUMBER   : %input2% >> %results%
@@ -241,7 +242,7 @@ echo -	network information including wireless
 		netsh wlan show profiles * key=clear >> %results%
 		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
 		echo Looking for XML files in %wlansvc% and copying info >> %results%
-		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
+		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %acquisition_path%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
 		netsh wlan show wirelesscapabilities >> %results% 1>nul
 		netsh wlan show interfaces >> %results% 1>nul
 		mkdir %wlanreport%
@@ -304,7 +305,7 @@ echo -	firewall status
 	echo %BORDER% >> %results%
 		netsh advfirewall show allprofiles >> %results%
 		if exist %systemroot%\system32\LogFiles\Firewall\pfirewall.log ( 
-			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %workingdir%\%outputfolder%\ 1>nul
+			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %acquisition_path%\ 1>nul
 		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
 	echo. >> %results%
@@ -342,9 +343,9 @@ echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
 	echo %BORDER% >> %results%
 	echo ======SAM, SYSTEM and SECURITY HIVE EXTRACTION================ >> %results%
 	echo %BORDER% >> %results%
-		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %results%
-		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %results%
-		reg save hklm\security %workingdir%\%outputfolder%\security_%outputfolder% >> %results%
+		reg save hklm\sam %acquisition_path%\sam_%outputfolder% >> %results%
+		reg save hklm\system %acquisition_path%\system_%outputfolder% >> %results%
+		reg save hklm\security %acquisition_path%\security_%outputfolder% >> %results%
 	echo. >> %results%
 
 echo %BORDER% >> %results%
