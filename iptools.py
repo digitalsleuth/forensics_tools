@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 The only purpose of this tool is to assist in parsing data blocks in applications or 
@@ -12,8 +12,8 @@ import logging
 from argparse import ArgumentParser
 
 __author__ = 'Corey Forman'
-__date__ = '8 Dec 2019'
-__version__ = '1.0'
+__date__ = '2 Oct 2021'
+__version__ = '1.1'
 __description__ = 'IP/Decimal/Hex conversion tool'
 
 def ip2dec(ip):
@@ -65,7 +65,7 @@ def hex2ip(hex):
         raise SystemExit(1)
 
 
-if __name__ == "__main__":
+def main():
     arg_parse = ArgumentParser(description="IP Conversion Toolset")
     arg_parse.add_argument("--decin", help="Convert decimal value")
     arg_parse.add_argument("--ipin",  help="Convert IP address")
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     arg_parse.add_argument("-q", action="store_true", help="Quiet mode, only output values, no headers")
     arg_parse.add_argument("-v", action="version", version='%(prog)s' +' v' + str(__version__))
     args = arg_parse.parse_args()
-	
+
     try:
         if args.ipin and args.decout:
             dec_value = ip2dec(args.ipin)
@@ -136,3 +136,6 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(str(type(e)) + "," + str(e))
         raise SystemExit(1)
+
+if __name__ == "__main__":
+    main()

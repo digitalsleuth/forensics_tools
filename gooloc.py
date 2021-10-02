@@ -22,15 +22,15 @@ __version__ = '1.0'
 __description__ = 'Google Location JSON parser'
 
 
-def ingest(json_file):         
+def ingest(json_file):
     results = json.load(json_file)
     return results
 
 def export_csv(parsed_json, out_csv):
     fieldnames=["latitude","longitude","unix_ms_timestamp","timestamp_converted_UTC"]
     writer = csv.DictWriter(out_csv, fieldnames)
-    writer.writeheader()    
-    for location in parsed_json['locations']:         
+    writer.writeheader()
+    for location in parsed_json['locations']:
         converted_time = dt.utcfromtimestamp(int(location['timestampMs'])/1000).strftime('%Y-%m-%d' + 'T' + '%H:%M:%S.%f' + 'Z') # Resulting date is YYYY-MM-DD HH:MM:SS
         row={}
         row['latitude'] = (float(location['latitudeE7']) / 10000000 )
@@ -61,28 +61,28 @@ def export_kml(parsed_json, out_kml):
         out_kml.write(field)
     return out_kml
 
-if __name__ == '__main__':
+def main():
     cwd = os.getcwd()
     arg_parse = ArgumentParser(description="Google Location JSON Parser", epilog="This script will parse out the geo-location information including timestamps,\nfrom the Google Location History JSON file exported from a user's profile.", formatter_class=RawTextHelpFormatter)
     arg_parse.add_argument("-i", metavar="<json_file>", help="Input file including path (if necessary)", required=True)
     arg_parse.add_argument("-o", metavar="<output_directory>", help="Output directory, default is " + cwd + ".", default=(cwd + "\\"))
     arg_parse.add_argument("-v", action="version", version='%(prog)s' +' v' + str(__version__))
     args = arg_parse.parse_args()
-    
+
     try:
         input_file = open(args.i, 'rb')
         output_csv = open(args.o + 'google_location.csv', 'w', newline='')
-        output_kml = open(args.o + 'google_location.kml', 'w')        
+        output_kml = open(args.o + 'google_location.kml', 'w')
     except IOError as e:
         print("Unable to read '%s': %s" % (args.i, e), file=sys.stderr)
         raise SystemExit(1)
-       
+
     try:
-        if args.i:                
+        if args.i:
             input_json = ingest(input_file)
             processed_csv = export_csv(input_json, output_csv)
             processed_kml = export_kml(input_json, output_kml)
-            try:                
+            try:
                 output_csv.close()
                 output_kml.close()
                 print("Files: google_location.csv and google_location.kml successfully written.")
@@ -93,3 +93,6 @@ if __name__ == '__main__':
             raise SystemExit(0)
     except Exception as e:
         print("Unable to perform operations on file '%s': %s" % (args.i, e), file=sys.stderr)
+
+if __name__ == '__main__':
+    main()
