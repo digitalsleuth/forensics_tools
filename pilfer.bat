@@ -387,6 +387,18 @@ echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
 		reg save hklm\security %workingdir%\%outputfolder%\security_%outputfolder% >> %results%
 	echo. >> %results%
 
+::echo -	NTUSER.DAT hive extraction
+::	echo %BORDER% >> %results%
+::	echo ======NTUSER.DAT HIVE EXTRACTION=============================== >> %results%
+::	echo %BORDER% >> %results%
+::        FOR /f "usebackq" %%x in (
+::	        `dir /B %SystemDrive%\Users\`
+::        ) DO (
+::	        mkdir %~dp0\%%x &
+::	        START /W "RawCopy" "%~dp0RawCopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:"%~dp0\%%x\"
+::        )
+::	echo. >> %results%
+
 echo %BORDER% >> %results%
 echo ======END OF EVIDENCE COLLECTION============================== >> %results%
 echo %BORDER% >> %results%
