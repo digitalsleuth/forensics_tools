@@ -4,13 +4,13 @@
 :: ** Source: https://github.com/digitalsleuth/forensics_tools
 :: ** Batch File to quickly gather basic system info & volatile network info
 :: ** then dump it out to a text file called Acquisition_Results.txt. 
-:: ** Although not critical, it is recommended that it be run with elevated priveleges,
-:: ** (right click and select "Run as administrator") especially for netstat details.
+:: ** This script must be run as administrator.
+:: ** (right click and select "Run as administrator")
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Corey Forman - 2020-09-07 ************************************
+:: ** Ongoing maintenance: Corey Forman - 2021-06-06 ************************************
 :: **************************************************************************************
-:: ** Version 1.7 ***********************************************************************
+:: ** Version 1.8 ***********************************************************************
 
 setlocal
 set workingdir=%~dp0
@@ -37,9 +37,9 @@ goto admin
 		goto cwd
     ) else (
         echo This script requires administrator privileges. Run as admin, and try again. Exiting.
-		echo Error %ERRORLEVEL%
+		net helpmsg 5
 		PAUSE
-		EXIT /B %ERRORLEVEL%
+		EXIT /B 5
 )
 :cwd
 echo %initiation_time%
@@ -104,10 +104,9 @@ echo.
    
 :startoutput
 set outputfolder=%fulldate%_%fulltime%
-set acquisition_path="%workingdir%\%outputfolder%"
-set wlanreport=%acquisition_path%\wlan-report
-set results=%acquisition_path%\Acquisition_Results.txt
-mkdir %acquisition_path%
+set wlanreport=%workingdir%\%outputfolder%\wlan-report
+set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
+mkdir %workingdir%\%outputfolder%
 echo %initiation_time% >> %results%
 echo INVESTIGATOR  : %input1% >> %results%
 echo FILE NUMBER   : %input2% >> %results%
@@ -208,6 +207,14 @@ echo -	volume details
 		mountvol | findstr "\ *" >> %results%
 	echo. >> %results%
 
+echo -	BitLocker configuration
+	echo %BORDER% >> %results%
+	echo ======BITLOCKER CONFIGURATION================================= >> %results%
+	echo %BORDER% >> %results%
+		manage-bde -status %SystemDrive% >> %results%
+		manage-bde -protectors -get %SystemDrive% >> %results%
+	echo. >> %results%
+	
 echo -	shadow copy details
 	echo %BORDER% >> %results%
 	echo ======SHADOW COPY DETAILS===================================== >> %results%
@@ -235,14 +242,17 @@ echo -	network information including wireless
 	echo %BORDER% >> %results%
 	echo. >> %results%
 		ipconfig /all >> %results%
+		echo. >> %results%
 		wmic nicconfig get description,IPAddress,MACaddress | findstr /I /C:":" >> %results%
 	echo. >> %results%
+	echo %BORDER% >> %results%
 	echo ======WIRELESS NETWORK INFO=================================== >> %results%
+	echo %BORDER% >> %results%
 		netsh wlan show profiles >> %results%
 		netsh wlan show profiles * key=clear >> %results%
 		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
 		echo Looking for XML files in %wlansvc% and copying info >> %results%
-		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %acquisition_path%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
+		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
 		netsh wlan show wirelesscapabilities >> %results% 1>nul
 		netsh wlan show interfaces >> %results% 1>nul
 		mkdir %wlanreport%
@@ -277,6 +287,13 @@ echo -	current users logged on remotely
 		net sessions >> %results%
 	echo. >> %results%
 
+echo -	remote desktop sessions
+    echo %BORDER% >> %results%
+	echo ======REMOTE DESKTOP SERVICES SESSIONS======================== >> %results%
+	echo %BORDER% >> %results%
+		qwinsta /counter >> %results%
+	echo. >> %results%
+	
 echo -	shares on the system
 	echo %BORDER% >> %results%
 	echo ======SHARES ON THE SYSTEM==================================== >> %results%
@@ -289,7 +306,7 @@ echo -	current drive mappings to a remote computer
 	echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT============= >> %results%
 	echo %BORDER% >> %results%
 		net use | findstr /r /v "^$" >> %results%
-		wmic netuse list full 1>nul >> %results%
+		wmic netuse list full >> %results%
 	echo. >> %results%
 
 echo -	current network connections (detailed)
@@ -299,17 +316,39 @@ echo -	current network connections (detailed)
 		netstat -anbo >> %results%
 	echo. >> %results%
 
+echo -	netbios cache and sessions
+    echo %BORDER% >> %results%
+	echo ======NETBIOS CACHE AND SESSIONS============================== >> %results%
+	echo %BORDER% >> %results%
+	    nbtstat -c >> %results%
+		nbtstat -s >> %results%
+	echo. >> %results%
+
+echo -	historical IP addresses
+	echo %BORDER% >> %results%
+	echo ======HISTORICAL IP'S FROM DELIVERY OPTIMIZATION============== >> %results%
+	echo %BORDER% >> %results%
+		%SystemDrive%\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Get-DeliveryOptimizationLog | Where-Object Message -Like "*ExternalIpAddress*"" >> %results%
+	echo. >> %results%
+	
 echo -	firewall status
 	echo %BORDER% >> %results%
 	echo ======FIREWALL STATUS========================================= >> %results%
 	echo %BORDER% >> %results%
 		netsh advfirewall show allprofiles >> %results%
 		if exist %systemroot%\system32\LogFiles\Firewall\pfirewall.log ( 
-			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %acquisition_path%\ 1>nul
+			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %workingdir%\%outputfolder%\ 1>nul
 		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
 	echo. >> %results%
 
+echo -	open or locked files
+	echo %BORDER% >> %results%
+	echo ======OPEN/LOCKED FILES======================================= >> %results%
+	echo %BORDER% >> %results%
+		net file  >> %results%
+	echo. >> %results%
+	
 echo -	currently running services
 	echo %BORDER% >> %results%
 	echo ======SERVICES CURRENTLY RUNNING ON THE PC==================== >> %results%
@@ -343,10 +382,22 @@ echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
 	echo %BORDER% >> %results%
 	echo ======SAM, SYSTEM and SECURITY HIVE EXTRACTION================ >> %results%
 	echo %BORDER% >> %results%
-		reg save hklm\sam %acquisition_path%\sam_%outputfolder% >> %results%
-		reg save hklm\system %acquisition_path%\system_%outputfolder% >> %results%
-		reg save hklm\security %acquisition_path%\security_%outputfolder% >> %results%
+		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %results%
+		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %results%
+		reg save hklm\security %workingdir%\%outputfolder%\security_%outputfolder% >> %results%
 	echo. >> %results%
+
+::echo -	NTUSER.DAT hive extraction
+::	echo %BORDER% >> %results%
+::	echo ======NTUSER.DAT HIVE EXTRACTION=============================== >> %results%
+::	echo %BORDER% >> %results%
+::        FOR /f "usebackq" %%x in (
+::	        `dir /B %SystemDrive%\Users\`
+::        ) DO (
+::	        mkdir %~dp0\%%x &
+::	        START /W "RawCopy" "%~dp0RawCopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:"%~dp0\%%x\"
+::        )
+::	echo. >> %results%
 
 echo %BORDER% >> %results%
 echo ======END OF EVIDENCE COLLECTION============================== >> %results%
@@ -354,5 +405,6 @@ echo %BORDER% >> %results%
 echo COMPLETED AT: %date% %time: =0% SYSTEMTIME >> %results%
 echo ===DONE===
 echo.
+timeout /t 5
 endlocal
 EXIT /B
