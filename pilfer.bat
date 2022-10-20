@@ -8,9 +8,9 @@
 :: ** (right click and select "Run as administrator")
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Corey Forman - 2021-06-06 ************************************
+:: ** Ongoing maintenance: Corey Forman - 2022-10-20 ************************************
 :: **************************************************************************************
-:: ** Version 1.8 ***********************************************************************
+:: ** Version 2.0 ***********************************************************************
 
 setlocal
 set workingdir=%~dp0
@@ -105,28 +105,94 @@ echo.
 :startoutput
 set outputfolder=%fulldate%_%fulltime%
 set wlanreport=%workingdir%\%outputfolder%\wlan-report
-set results=%workingdir%\%outputfolder%\Acquisition_Results.txt
+set results=%workingdir%\%outputfolder%\Acquisition_Results.html
 mkdir %workingdir%\%outputfolder%
-echo %initiation_time% >> %results%
-echo INVESTIGATOR  : %input1% >> %results%
-echo FILE NUMBER   : %input2% >> %results%
-echo SYSTEM TIME   : %datetime% >> %results%
-echo CORRECT DATE  : %fulldate% >> %results%
-echo CORRECT TIME  : %fulltime% >> %results%
-echo SYSTEM TZ     : %tzcheck% >> %results%
-echo CURR TZ OFFSET: UTC %tzoffsethrs% >> %results%
-echo EXHIBIT INFO  : %input5% >> %results%
+for %%l in (
+"<!DOCTYPE html>"
+"<html>"
+"<head>"
+"<style>"
+"body {"
+"  background-color: white;"
+"  font-family: verdana;"
+"  font-size: 12px;"
+"}"
+".collapsible {"
+"  background-color: #777;"
+"  color: white;"
+"  cursor: pointer;"
+"  padding: 18px;"
+"  width: 100%;"
+"  border: none;"
+"  text-align: left;"
+"  outline: none;"
+"  font-size: 15px;"
+"}"
+".active, .collapsible:hover {"
+"  background-color: #1644b9;"
+"}"
+".content {"
+"  padding: 0 18px;"
+"  display: none;"
+"  overflow: hidden;"
+"  background-color: #f1f1f1;"
+"  white-space: pre;"
+"}"
+"h1 {"
+"  color: #1644b9;"
+"  text-align: center;"
+"  text-decoration: underline;"
+"  font-size: 16px;"
+"}"
+"h2 {"
+"  color: #093384;"
+"  text-align: left;"
+"  text-decoration: underline;"
+"  font-size: 12px;"
+"  font-weight: bold;"
+"  display: block;"
+"  white-space: pre;"
+"}"
+"h3 {"
+"  color: black;"
+"  text-align: left;"
+"  font-size: 12px;"
+"  font-family: verdana;"
+"  font-weight: bold;"
+"  white-space: pre;"
+"  display: block;"
+"}"
+"p {"
+"  font-family: verdana;"
+"  font-size: 12px;"
+"  white-space: pre;"
+"}"
+"</style>"
+"</head>"
+"<body>"
+) do echo.%%~l >> %results%
+echo ^<h1^>>> %results%
+echo ^<button type="button" class="collapsible"^>^<a name="top"^>%initiation_time%^</a^>^</button^>>> %results%
+echo ^</h1^>^</a^>>> %results%
+echo ^<button type="button" class="collapsible"^>Investigation Details^</button^>>> %results%
+echo ^<div class="content"^>^<p^>>> %results%
+echo INVESTIGATOR	: %input1% >> %results%
+echo FILE NUMBER	: %input2% >> %results%
+echo SYSTEM TIME	: %datetime% >> %results%
+echo CORRECT DATE	: %fulldate% >> %results%
+echo CORRECT TIME	: %fulltime% >> %results%
+echo SYSTEM TZ		: %tzcheck% >> %results%
+echo CURR TZ OFFSET	: UTC %tzoffsethrs% >> %results%
+echo EXHIBIT INFO	: %input5% >> %results%
+echo ^</div^>^</p^>>> %results%
 goto startprocess
 
 :startprocess
 
-set BORDER===============================================================
-
 echo Getting:
 echo -	current system date and time
-	echo %BORDER% >> %results%
-	echo ======CURRENT SYSTEM DATE/TIME AND TIMEZONE=================== >> %results%
-	echo %BORDER% >> %results%
+	echo ^<button type="button" class="collapsible"^>^<a name="csdt"^>CURRENT SYSTEM DATE/TIME AND TIMEZONE^</a^>^</button^>>> %results%
+	echo ^<div class="content"^>^<p^>>> %results%
 	echo. >> %results%
 		echo %date% %time: =0% >> %results%
 		echo. >> %results%
@@ -134,120 +200,104 @@ echo -	current system date and time
 		echo. >> %results%
 		wmic timezone get bias,caption,daylightbias,daylightname /format:list| findstr /r /v "^$" >> %results%
 		wmic os get currenttimezone /format:list | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	current user
-	echo %BORDER% >> %results%
-	echo ======CURRENT USER============================================ >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="current-user"^>CURRENT USER^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		whoami >> %results%
 	echo. >> %results%
-
-	echo %BORDER% >> %results%
-	echo ======ALL USER ACCOUNTS======================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^</div^>^</p^>>> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="all-users"^>ALL USER ACCOUNTS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic useraccount get caption,domain,fullname,name,SID /format:table | findstr /r /v "^$" >> %results%
 		net user | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	account policies
-	echo %BORDER% >> %results%
-	echo ======CURRENT USER ACCOUNT POLICIES=========================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="current-user-policies"^>CURRENT USER ACCOUNT POLICIES^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net accounts | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	list of groups on the computer
-	echo %BORDER% >> %results%
-	echo ======LIST OF GROUPS ON COMPUTER============================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="groups-on-computer"^>LIST OF GROUPS ON COMPUTER^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net localgroup | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	basic system information
-	echo %BORDER% >> %results%
-	echo ======BASIC SYSTEM INFORMATION================================ >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="basic-system-info"^>BASIC SYSTEM INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		systeminfo >> %results%
-	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
 
 echo -	BIOS information
-	echo %BORDER% >> %results%
-	echo ======BIOS INFORMATION======================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="bios-info"^>BIOS INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic bios get BIOSVersion,Caption,Description,Manufacturer,ReleaseDate,SerialNumber,Version /format:list | findstr /r /v "^$" >> %results%
-	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
 
 echo -	local physical disk configuration details
-	echo %BORDER% >> %results%
-	echo ======PHYSICAL DISK INFORMATION=============================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="physical-disk-info"^>PHYSICAL DISK INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic diskdrive get BytesPerSector,CapabilityDescriptions,Caption,DeviceID,FirmwareRevision,Index,InstallDate,InterfaceType,Manufacturer,MediaType,Model,Name,Partitions,PNPDeviceID,SerialNumber,Size /format:list | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	local logical disk configuration details
-	echo %BORDER% >> %results%
-	echo ======LOGICAL DISK INFORMATION================================ >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="logical-disk-info"^>LOGICAL DISK INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic logicaldisk get Caption,Compressed,Description,DeviceID,DriveType,FileSystem,FreeSpace,Name,Size,VolumeName,VolumeSerialNumber /format:list | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	partition details
-	echo %BORDER% >> %results%
-	echo ======PARTITION INFORMATION=================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="partition-info"^>PARTITION INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic partition get BlockSize,Caption,Description,DeviceID,DiskIndex,Name,Size,StartingOffset,SystemName,Type /format:list | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	volume details
-	echo %BORDER% >> %results%
-	echo ======VOLUME INFORMATION====================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="volume-info"^>VOLUME INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic volume get BlockSize,Capacity,Caption,DeviceID,DriveLetter,FileSystem,FreeSpace,Label,Name,SerialNumber,SystemVolume /format:table | findstr /r /v "^$" >> %results%
 		mountvol | findstr "\ *" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	BitLocker configuration
-	echo %BORDER% >> %results%
-	echo ======BITLOCKER CONFIGURATION================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="bitlocker-info"^>BITLOCKER CONFIGURATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		manage-bde -status %SystemDrive% >> %results%
 		manage-bde -protectors -get %SystemDrive% >> %results%
-	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
 	
 echo -	shadow copy details
-	echo %BORDER% >> %results%
-	echo ======SHADOW COPY DETAILS===================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="shadow-copy-info"^>SHADOW COPY DETAILS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic shadowcopy get Caption,Description,DeviceObject,ID,InstallDate,OriginatingMachine,ProviderID,SetID,VolumeName /format:list | findstr /r /v "^$"  >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	last system boot time
-	echo %BORDER% >> %results%
-	echo ======LAST TIME SYSTEM WAS BOOTED============================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="last-system-boot"^>LAST TIME SYSTEM WAS BOOTED^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic os get lastbootuptime | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	startup info
-	echo %BORDER% >> %results%
-	echo ======STARTUP INFORMATION===================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="startup-info"^>STARTUP INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		wmic startup get * /format:list | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	network information including wireless
-	echo %BORDER% >> %results%
-	echo ======NETWORK INFORMATION===================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="network-info"^>NETWORK INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 	echo. >> %results%
 		ipconfig /all >> %results%
 		echo. >> %results%
 		wmic nicconfig get description,IPAddress,MACaddress | findstr /I /C:":" >> %results%
-	echo. >> %results%
-	echo %BORDER% >> %results%
-	echo ======WIRELESS NETWORK INFO=================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^</div^>^</p^>>> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="wireless-network-info"^>WIRELESS NETWORK INFO^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		netsh wlan show profiles >> %results%
 		netsh wlan show profiles * key=clear >> %results%
 		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
@@ -257,152 +307,161 @@ echo -	network information including wireless
 		netsh wlan show interfaces >> %results% 1>nul
 		mkdir %wlanreport%
 		netsh wlan show wlanreport 1>nul && copy C:\ProgramData\Microsoft\Windows\WlanReport\wlan-report-latest.* %wlanreport% 1>nul
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	DNS information
-	echo %BORDER% >> %results%
-	echo ======DNS INFORMATION========================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="dns-info"^>DNS INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		ipconfig /displaydns >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	routing information
-	echo %BORDER% >> %results%
-	echo ======NETWORK ROUTING INFORMATION============================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="routing-info"^>NETWORK ROUTING INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		route print >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	ARP information
-	echo %BORDER% >> %results%
-	echo ======ARP INFORMATION========================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="arp-info"^>ARP INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		arp -a >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	current users logged on remotely
-	echo %BORDER% >> %results%
-	echo ======CURRENT USERS LOGGED ON REMOTELY======================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="remote-logged-in-users"^>CURRENT USERS LOGGED ON REMOTELY^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net sessions >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	remote desktop sessions
-    echo %BORDER% >> %results%
-	echo ======REMOTE DESKTOP SERVICES SESSIONS======================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="remote-desktop-sessions"^>REMOTE DESKTOP SERVICES SESSIONS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		qwinsta /counter >> %results%
-	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
 	
 echo -	shares on the system
-	echo %BORDER% >> %results%
-	echo ======SHARES ON THE SYSTEM==================================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="shares-on-system"^>SHARES ON THE SYSTEM^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net share | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	current drive mappings to a remote computer
-	echo %BORDER% >> %results%
-	echo ======DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT============= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="drive-mappings-to-remote-computer"^>DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net use | findstr /r /v "^$" >> %results%
 		wmic netuse list full >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	current network connections (detailed)
-	echo %BORDER% >> %results%
-	echo ======CURRENT NETWORK CONNECTIONS (DETAILED)================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="detailed-network-connections"^>CURRENT NETWORK CONNECTIONS (DETAILED)^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		netstat -anbo >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	netbios cache and sessions
-    echo %BORDER% >> %results%
-	echo ======NETBIOS CACHE AND SESSIONS============================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="netbios-cache-sessions"^>NETBIOS CACHE AND SESSIONS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 	    nbtstat -c >> %results%
 		nbtstat -s >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	historical IP addresses
-	echo %BORDER% >> %results%
-	echo ======HISTORICAL IP'S FROM DELIVERY OPTIMIZATION============== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="historical-ips"^>HISTORICAL IP'S FROM DELIVERY OPTIMIZATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		%SystemDrive%\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Get-DeliveryOptimizationLog | Where-Object Message -Like "*ExternalIpAddress*"" >> %results%
-	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
 	
 echo -	firewall status
-	echo %BORDER% >> %results%
-	echo ======FIREWALL STATUS========================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="firewall-status"^>FIREWALL STATUS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		netsh advfirewall show allprofiles >> %results%
 		if exist %systemroot%\system32\LogFiles\Firewall\pfirewall.log ( 
 			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %workingdir%\%outputfolder%\ 1>nul
 		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	open or locked files
-	echo %BORDER% >> %results%
-	echo ======OPEN/LOCKED FILES======================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="open-locked-files"^>OPEN/LOCKED FILES^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net file  >> %results%
-	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
 	
 echo -	currently running services
-	echo %BORDER% >> %results%
-	echo ======SERVICES CURRENTLY RUNNING ON THE PC==================== >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="running-services"^>SERVICES CURRENTLY RUNNING ON THE PC^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		net start >> %results%
 		wmic service get Name,PathName,ServiceType,StartMode /format:table | find /V "" | findstr /r /v "^$" >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	running processes
-	echo %BORDER% >> %results%
-	echo ======RUNNING PROCESSES (DETAILED)============================ >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="running-processes"^>RUNNING PROCESSES (DETAILED)^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		tasklist /v >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	scheduled tasks
-	echo %BORDER% >> %results%
-	echo ======SCHEDULED TASKS========================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="scheduled-tasks"^>SCHEDULED TASKS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		schtasks /query /FO LIST /V >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	contents of Prefetch
-	echo %BORDER% >> %results%
-	echo ======PREFETCH CONTENTS======================================= >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="prefetch-contents"^>PREFETCH CONTENTS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %results%
-	echo. >> %results%
-
+    echo ^</div^>^</p^>>> %results%
+	
 echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
-	echo %BORDER% >> %results%
-	echo ======SAM, SYSTEM and SECURITY HIVE EXTRACTION================ >> %results%
-	echo %BORDER% >> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="registry-hive-extractions"^>SAM, SYSTEM and SECURITY HIVE EXTRACTION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
 		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %results%
+		if %errorlevel% == 0 echo SAM hive successfully extracted >> %results%
+			echo. >> %results%
 		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %results%
+		if %errorlevel% == 0 echo SYSTEM hive successfully extracted >> %results%
+			echo. >> %results%
 		reg save hklm\security %workingdir%\%outputfolder%\security_%outputfolder% >> %results%
-	echo. >> %results%
-
+		if %errorlevel% == 0 echo SECURITY hive successfully extracted >> %results%
+			echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
+	
 ::echo -	NTUSER.DAT hive extraction
-::	echo %BORDER% >> %results%
-::	echo ======NTUSER.DAT HIVE EXTRACTION=============================== >> %results%
-::	echo %BORDER% >> %results%
-::        FOR /f "usebackq" %%x in (
+::::	echo NTUSER.DAT HIVE EXTRACTION >> %results%
+::::        FOR /f "usebackq" %%x in (
 ::	        `dir /B %SystemDrive%\Users\`
 ::        ) DO (
 ::	        mkdir %~dp0\%%x &
 ::	        START /W "RawCopy" "%~dp0RawCopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:"%~dp0\%%x\"
 ::        )
 ::	echo. >> %results%
-
-echo %BORDER% >> %results%
-echo ======END OF EVIDENCE COLLECTION============================== >> %results%
-echo %BORDER% >> %results%
+echo ^<h2^>>> %results%
+echo ^<a name="end-of-collection"^>>> %results%
+echo END OF EVIDENCE COLLECTION >> %results%
+echo ^</a^>^</h2^>>> %results%
+echo ^<p^>>> %results%
 echo COMPLETED AT: %date% %time: =0% SYSTEMTIME >> %results%
+echo ^</p^>>> %results%
+for %%l in (
+"<script>"
+"var coll = document.getElementsByClassName("collapsible");"
+"var i;"
+""
+"for (i = 0; i < coll.length; i++) {"
+"  coll[i].addEventListener("click", function() {"
+"    this.classList.toggle("active");"
+"    var content = this.nextElementSibling;"
+"    if (content.style.display === "block") {"
+"      content.style.display = "none";"
+"    } else {"
+"      content.style.display = "block";"
+"    }"
+"  });"
+"}"
+"</script>"
+) do echo.%%~l >> %results%
+echo ^</body^>>> %results%
+echo ^</html^>>> %results%
 echo ===DONE===
 echo.
 timeout /t 5
