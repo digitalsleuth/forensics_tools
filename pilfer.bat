@@ -184,8 +184,8 @@ echo SYSTEM TIME	 : %datetime% >> %results%
 echo CORRECT DATE	 : %fulldate% >> %results%
 echo CORRECT TIME	 : %fulltime% >> %results%
 echo SYSTEM TZ	 : %tzcheck% >> %results%
-echo CURR TZ OFFSET : UTC %tzoffsethrs% >> %results%
-echo EXHIBIT INFO : %input5% >> %results%
+echo CURR TZ OFFSET: UTC %tzoffsethrs% >> %results%
+echo EXHIBIT INFO	: %input5% >> %results%
 echo ^</div^>^</p^>>> %results%
 goto startprocess
 
