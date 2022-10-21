@@ -10,7 +10,7 @@
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
 :: ** Ongoing maintenance: Corey Forman - 2022-10-20 ************************************
 :: **************************************************************************************
-:: ** Version 2.0 ***********************************************************************
+:: ** Version 2.1 ***********************************************************************
 
 setlocal
 set workingdir=%~dp0
@@ -106,6 +106,7 @@ echo.
 set outputfolder=%fulldate%_%fulltime%
 set wlanreport=%workingdir%\%outputfolder%\wlan-report
 set results=%workingdir%\%outputfolder%\Acquisition_Results.html
+set out=%workingdir%\%outputfolder%
 mkdir %workingdir%\%outputfolder%
 for %%l in (
 "<!DOCTYPE html>"
@@ -148,7 +149,7 @@ for %%l in (
 "  color: #093384;"
 "  text-align: left;"
 "  text-decoration: underline;"
-"  font-size: 12px;"
+"  font-size: 14px;"
 "  font-weight: bold;"
 "  display: block;"
 "  white-space: pre;"
@@ -156,11 +157,11 @@ for %%l in (
 "h3 {"
 "  color: black;"
 "  text-align: left;"
-"  font-size: 12px;"
+"  font-size: 14px;"
 "  font-family: verdana;"
 "  font-weight: bold;"
 "  white-space: pre;"
-"  display: block;"
+"  display: inline-block;"
 "}"
 "p {"
 "  font-family: verdana;"
@@ -174,22 +175,27 @@ for %%l in (
 echo ^<h1^>>> %results%
 echo ^<button type="button" class="collapsible"^>^<a name="top"^>%initiation_time%^</a^>^</button^>>> %results%
 echo ^</h1^>^</a^>>> %results%
+echo ^<div style="text-align:center"^>^<h3^>^<a href="#physical-system-details"^>Physical System Details^</a^>^</h3^>  ^<h3^>^<a href="#soft-proc-task"^>Software, Processes and Tasks^</a^>^</h3^>   ^<h3^>^<a href="#user-details"^>User Details^</a^>^</h3^>   ^<h3^>^<a href="#network-details"^>Network Details^</a^>^</h3^>   ^<h3^>^<a href="#registry"^>Registry^</a^>^</h3^>   ^<h3^>^<a href="#end-of-collection"^>End of Collection Details^</a^>^</h3^>^</div^>>> %results%
 echo ^<button type="button" class="collapsible"^>Investigation Details^</button^>>> %results%
 echo ^<div class="content"^>^<p^>>> %results%
-echo INVESTIGATOR	: %input1% >> %results%
-echo FILE NUMBER	: %input2% >> %results%
-echo SYSTEM TIME	: %datetime% >> %results%
-echo CORRECT DATE	: %fulldate% >> %results%
-echo CORRECT TIME	: %fulltime% >> %results%
-echo SYSTEM TZ		: %tzcheck% >> %results%
-echo CURR TZ OFFSET	: UTC %tzoffsethrs% >> %results%
-echo EXHIBIT INFO	: %input5% >> %results%
+echo INVESTIGATOR	 : %input1% >> %results%
+echo FILE NUMBER	 : %input2% >> %results%
+echo SYSTEM TIME	 : %datetime% >> %results%
+echo CORRECT DATE	 : %fulldate% >> %results%
+echo CORRECT TIME	 : %fulltime% >> %results%
+echo SYSTEM TZ	 : %tzcheck% >> %results%
+echo CURR TZ OFFSET : UTC %tzoffsethrs% >> %results%
+echo EXHIBIT INFO : %input5% >> %results%
 echo ^</div^>^</p^>>> %results%
 goto startprocess
 
 :startprocess
 
+echo ^<h2^>>> %results%
+echo ^<a name="physical-system-details"^>PHYSICAL SYSTEM DETAILS^</a^>>> %results%
+echo ^</h2^>>> %results%
 echo Getting:
+
 echo -	current system date and time
 	echo ^<button type="button" class="collapsible"^>^<a name="csdt"^>CURRENT SYSTEM DATE/TIME AND TIMEZONE^</a^>^</button^>>> %results%
 	echo ^<div class="content"^>^<p^>>> %results%
@@ -201,31 +207,15 @@ echo -	current system date and time
 		wmic timezone get bias,caption,daylightbias,daylightname /format:list| findstr /r /v "^$" >> %results%
 		wmic os get currenttimezone /format:list | findstr /r /v "^$" >> %results%
     echo ^</div^>^</p^>>> %results%
-	
-echo -	current user
-    echo ^<button type="button" class="collapsible"^>^<a name="current-user"^>CURRENT USER^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		whoami >> %results%
+
+echo -	full system details
+	echo ^<button type="button" class="collapsible"^>^<a name="full-system-details"^>FULL SYSTEM INFORMATION^</a^>^</button^>>> %results%
+	echo ^<div class="content"^>^<p^>>> %results%
 	echo. >> %results%
+		msinfo32 /report %out%\full-system-info.txt
+		type %out%\full-system-info.txt>> %results%
     echo ^</div^>^</p^>>> %results%
-    echo ^<button type="button" class="collapsible"^>^<a name="all-users"^>ALL USER ACCOUNTS^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		wmic useraccount get caption,domain,fullname,name,SID /format:table | findstr /r /v "^$" >> %results%
-		net user | findstr /r /v "^$" >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
-echo -	account policies
-    echo ^<button type="button" class="collapsible"^>^<a name="current-user-policies"^>CURRENT USER ACCOUNT POLICIES^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		net accounts | findstr /r /v "^$" >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
-echo -	list of groups on the computer
-    echo ^<button type="button" class="collapsible"^>^<a name="groups-on-computer"^>LIST OF GROUPS ON COMPUTER^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		net localgroup | findstr /r /v "^$" >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
+
 echo -	basic system information
     echo ^<button type="button" class="collapsible"^>^<a name="basic-system-info"^>BASIC SYSTEM INFORMATION^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
@@ -236,6 +226,18 @@ echo -	BIOS information
     echo ^<button type="button" class="collapsible"^>^<a name="bios-info"^>BIOS INFORMATION^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 		wmic bios get BIOSVersion,Caption,Description,Manufacturer,ReleaseDate,SerialNumber,Version /format:list | findstr /r /v "^$" >> %results%
+    echo ^</div^>^</p^>>> %results%
+
+echo -	last system boot time
+    echo ^<button type="button" class="collapsible"^>^<a name="last-system-boot"^>LAST TIME SYSTEM WAS BOOTED^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		wmic os get lastbootuptime | findstr /r /v "^$" >> %results%
+    echo ^</div^>^</p^>>> %results%
+	
+echo -	startup info
+    echo ^<button type="button" class="collapsible"^>^<a name="startup-info"^>STARTUP INFORMATION^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		wmic startup get * /format:list | findstr /r /v "^$" >> %results%
     echo ^</div^>^</p^>>> %results%
 
 echo -	local physical disk configuration details
@@ -262,32 +264,100 @@ echo -	volume details
 		wmic volume get BlockSize,Capacity,Caption,DeviceID,DriveLetter,FileSystem,FreeSpace,Label,Name,SerialNumber,SystemVolume /format:table | findstr /r /v "^$" >> %results%
 		mountvol | findstr "\ *" >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	BitLocker configuration
     echo ^<button type="button" class="collapsible"^>^<a name="bitlocker-info"^>BITLOCKER CONFIGURATION^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 		manage-bde -status %SystemDrive% >> %results%
 		manage-bde -protectors -get %SystemDrive% >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	shadow copy details
     echo ^<button type="button" class="collapsible"^>^<a name="shadow-copy-info"^>SHADOW COPY DETAILS^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 		wmic shadowcopy get Caption,Description,DeviceObject,ID,InstallDate,OriginatingMachine,ProviderID,SetID,VolumeName /format:list | findstr /r /v "^$"  >> %results%
     echo ^</div^>^</p^>>> %results%
-	
-echo -	last system boot time
-    echo ^<button type="button" class="collapsible"^>^<a name="last-system-boot"^>LAST TIME SYSTEM WAS BOOTED^</a^>^</button^>>> %results%
+
+echo ^<h2^>>> %results%
+echo ^<a name="soft-proc-task"^>SOFTWARE, PROCESSES, and TASKS^</a^>>> %results%
+echo ^</h2^>>> %results%
+
+echo -	installed software
+	echo ^<button type="button" class="collapsible"^>^<a name="full-system-details"^>INSTALLED SOFTWARE^</a^>^</button^>>> %results%
+	echo ^<div class="content"^>^<p^>>> %results%
+	echo. >> %results%
+		wmic product get Name,Version,InstallDate,InstallLocation,InstallSource,LocalPackage,IdentifyingNumber,PackageCode,PackageName>> %results%
+    echo ^</div^>^</p^>>> %results%
+
+echo -	open or locked files
+    echo ^<button type="button" class="collapsible"^>^<a name="open-locked-files"^>OPEN/LOCKED FILES^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
-		wmic os get lastbootuptime | findstr /r /v "^$" >> %results%
+		net file  >> %results%
     echo ^</div^>^</p^>>> %results%
 	
-echo -	startup info
-    echo ^<button type="button" class="collapsible"^>^<a name="startup-info"^>STARTUP INFORMATION^</a^>^</button^>>> %results%
+echo -	currently running services
+    echo ^<button type="button" class="collapsible"^>^<a name="running-services"^>SERVICES CURRENTLY RUNNING ON THE PC^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
-		wmic startup get * /format:list | findstr /r /v "^$" >> %results%
+		net start >> %results%
+		wmic service get Name,PathName,ServiceType,StartMode /format:table | find /V "" | findstr /r /v "^$" >> %results%
     echo ^</div^>^</p^>>> %results%
 	
+echo -	running processes
+    echo ^<button type="button" class="collapsible"^>^<a name="running-processes"^>RUNNING PROCESSES (DETAILED)^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		tasklist /v >> %results%
+    echo ^</div^>^</p^>>> %results%
+	
+echo -	scheduled tasks
+    echo ^<button type="button" class="collapsible"^>^<a name="scheduled-tasks"^>SCHEDULED TASKS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		schtasks /query /FO LIST /V >> %results%
+    echo ^</div^>^</p^>>> %results%
+
+echo -	contents of Prefetch
+    echo ^<button type="button" class="collapsible"^>^<a name="prefetch-contents"^>PREFETCH CONTENTS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %results%
+    echo ^</div^>^</p^>>> %results%
+
+echo ^<h2^>>> %results%
+echo ^<a name="user-details"^>USER DETAILS^</a^>>> %results%
+echo ^</h2^>>> %results%
+
+echo -	current user
+    echo ^<button type="button" class="collapsible"^>^<a name="current-user"^>CURRENT USER^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		whoami >> %results%
+	echo. >> %results%
+    echo ^</div^>^</p^>>> %results%
+    echo ^<button type="button" class="collapsible"^>^<a name="all-users"^>ALL USER ACCOUNTS^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		wmic useraccount get caption,domain,fullname,name,SID /format:table | findstr /r /v "^$" >> %results%
+		net user | findstr /r /v "^$" >> %results%
+    echo ^</div^>^</p^>>> %results%
+
+echo -	current users logged on remotely
+    echo ^<button type="button" class="collapsible"^>^<a name="remote-logged-in-users"^>CURRENT USERS LOGGED ON REMOTELY^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		net sessions >> %results%
+    echo ^</div^>^</p^>>> %results%
+	
+echo -	account policies
+    echo ^<button type="button" class="collapsible"^>^<a name="current-user-policies"^>CURRENT USER ACCOUNT POLICIES^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		net accounts | findstr /r /v "^$" >> %results%
+    echo ^</div^>^</p^>>> %results%
+	
+echo -	list of groups on the computer
+    echo ^<button type="button" class="collapsible"^>^<a name="groups-on-computer"^>LIST OF GROUPS ON COMPUTER^</a^>^</button^>>> %results%
+    echo ^<div class="content"^>^<p^>>> %results%
+		net localgroup | findstr /r /v "^$" >> %results%
+    echo ^</div^>^</p^>>> %results%
+
+echo ^<h2^>>> %results%
+echo ^<a name="network-details"^>NETWORK DETAILS^</a^>>> %results%
+echo ^</h2^>>> %results%
+
 echo -	network information including wireless
     echo ^<button type="button" class="collapsible"^>^<a name="network-info"^>NETWORK INFORMATION^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
@@ -326,25 +396,19 @@ echo -	ARP information
     echo ^<div class="content"^>^<p^>>> %results%
 		arp -a >> %results%
     echo ^</div^>^</p^>>> %results%
-	
-echo -	current users logged on remotely
-    echo ^<button type="button" class="collapsible"^>^<a name="remote-logged-in-users"^>CURRENT USERS LOGGED ON REMOTELY^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		net sessions >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
+
 echo -	remote desktop sessions
     echo ^<button type="button" class="collapsible"^>^<a name="remote-desktop-sessions"^>REMOTE DESKTOP SERVICES SESSIONS^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 		qwinsta /counter >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	shares on the system
     echo ^<button type="button" class="collapsible"^>^<a name="shares-on-system"^>SHARES ON THE SYSTEM^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 		net share | findstr /r /v "^$" >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	current drive mappings to a remote computer
     echo ^<button type="button" class="collapsible"^>^<a name="drive-mappings-to-remote-computer"^>DRIVE MAPPINGS TO REMOTE COMPUTER - CURRENT^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
@@ -357,20 +421,20 @@ echo -	current network connections (detailed)
     echo ^<div class="content"^>^<p^>>> %results%
 		netstat -anbo >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	netbios cache and sessions
     echo ^<button type="button" class="collapsible"^>^<a name="netbios-cache-sessions"^>NETBIOS CACHE AND SESSIONS^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 	    nbtstat -c >> %results%
 		nbtstat -s >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	historical IP addresses
     echo ^<button type="button" class="collapsible"^>^<a name="historical-ips"^>HISTORICAL IP'S FROM DELIVERY OPTIMIZATION^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
 		%SystemDrive%\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Get-DeliveryOptimizationLog | Where-Object Message -Like "*ExternalIpAddress*"" >> %results%
     echo ^</div^>^</p^>>> %results%
-	
+
 echo -	firewall status
     echo ^<button type="button" class="collapsible"^>^<a name="firewall-status"^>FIREWALL STATUS^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
@@ -380,38 +444,11 @@ echo -	firewall status
 		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
     echo ^</div^>^</p^>>> %results%
-	
-echo -	open or locked files
-    echo ^<button type="button" class="collapsible"^>^<a name="open-locked-files"^>OPEN/LOCKED FILES^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		net file  >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
-echo -	currently running services
-    echo ^<button type="button" class="collapsible"^>^<a name="running-services"^>SERVICES CURRENTLY RUNNING ON THE PC^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		net start >> %results%
-		wmic service get Name,PathName,ServiceType,StartMode /format:table | find /V "" | findstr /r /v "^$" >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
-echo -	running processes
-    echo ^<button type="button" class="collapsible"^>^<a name="running-processes"^>RUNNING PROCESSES (DETAILED)^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		tasklist /v >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
-echo -	scheduled tasks
-    echo ^<button type="button" class="collapsible"^>^<a name="scheduled-tasks"^>SCHEDULED TASKS^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		schtasks /query /FO LIST /V >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
-echo -	contents of Prefetch
-    echo ^<button type="button" class="collapsible"^>^<a name="prefetch-contents"^>PREFETCH CONTENTS^</a^>^</button^>>> %results%
-    echo ^<div class="content"^>^<p^>>> %results%
-		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %results%
-    echo ^</div^>^</p^>>> %results%
-	
+
+echo ^<h2^>>> %results%
+echo ^<a name="registry"^>REGISTRY^</a^>>> %results%
+echo ^</h2^>>> %results%
+
 echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
     echo ^<button type="button" class="collapsible"^>^<a name="registry-hive-extractions"^>SAM, SYSTEM and SECURITY HIVE EXTRACTION^</a^>^</button^>>> %results%
     echo ^<div class="content"^>^<p^>>> %results%
