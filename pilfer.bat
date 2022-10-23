@@ -8,11 +8,13 @@
 :: ** (right click and select "Run as administrator")
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Corey Forman - 2022-10-22 ************************************
+:: ** Ongoing maintenance: Corey Forman - 2022-10-23 ************************************
 :: **************************************************************************************
-:: ** Version 2.2 ***********************************************************************
+:: ** Version 2.3 ***********************************************************************
 
 setlocal
+set version=2.3
+TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
      set fulldatetime=%%j
@@ -113,6 +115,7 @@ for %%l in (
 "<!DOCTYPE html>"
 "<html>"
 "<head>"
+"<title>Acquisition Results - %datetime%</title>"
 "<style>"
 "body {"
 "  background-color: white;"
@@ -138,7 +141,6 @@ for %%l in (
 "  padding: 0 18px;"
 "  display: none;"
 "  overflow: hidden;"
-"  background-color: #f1f1f1;"
 "  white-space: pre;"
 "}"
 "h1 {"
@@ -161,7 +163,7 @@ for %%l in (
 "  font-size: 12px;"
 "  white-space: pre;"
 "}"
-"  a.button:link, a.button:visited {"
+"a.button:link, a.button:visited {"
 "  background-color: #777;"
 "  color: white;"
 "  padding: 14px 25px;"
@@ -213,9 +215,9 @@ for %%l in (
 "</style>"
 "</head>"
 "<body>"
-"<div style="text-align:right"><button type="button" class="dark-button" onclick="darkMode()"></button>"
-"<button type="button" class="light-button" onclick="lightMode()"></button></div>"
 ) do echo.%%~l >> %results%
+echo ^<div style="text-align:right"^>^<button type="button" class="dark-button" onclick="darkMode()"^>^</button^>>> %results%
+echo ^<button type="button" class="light-button" onclick="lightMode()"^>^</button^>^</div^>>> %results%
 echo ^<h1^>>> %results%
 echo ^<button type="button" class="collapsible"^>^<section id="top"^>%initiation_time%^</section^>^</button^>>> %results%
 echo ^</h1^>>> %results%
@@ -237,7 +239,8 @@ goto startprocess
 
 echo ^<h2^>>> %results%
 echo ^<section id="physical-system-details"^>PHYSICAL SYSTEM DETAILS^</section^>^</h2^>^<p^>^<a class="plain" href="#top"^>top^</a^>^</p^>>> %results%
-echo Getting:
+TITLE Pilfering: Physical System Details
+echo Pilfering:
 
 echo -	current system date and time
 	echo ^<button type="button" class="collapsible"^>^<section id="csdt"^>CURRENT SYSTEM DATE/TIME AND TIMEZONE^</section^>^</button^>>> %results%
@@ -321,6 +324,7 @@ echo -	shadow copy details
 		wmic shadowcopy get Caption,Description,DeviceObject,ID,InstallDate,OriginatingMachine,ProviderID,SetID,VolumeName /format:list | findstr /r /v "^$"  >> %results%
     echo ^</div^>^</p^>>> %results%
 
+TITLE Pilfering: Software, Processes, and Tasks
 echo ^<h2^>>> %results%
 echo ^<section id="soft-proc-task"^>SOFTWARE, PROCESSES, and TASKS^</section^>^</h2^>^<p^>^<a class="plain" href="#top"^>top^</a^>^</p^>>> %results%
 
@@ -362,6 +366,7 @@ echo -	contents of Prefetch
 		dir /B %SYSTEMDRIVE%\Windows\Prefetch\*.pf >> %results%
     echo ^</div^>^</p^>>> %results%
 
+TITLE Pilfering: User Details
 echo ^<h2^>>> %results%
 echo ^<section id="user-details"^>USER DETAILS^</section^>^</h2^>^<p^>^<a class="plain" href="#top"^>top^</a^>^</p^>>> %results%
 
@@ -395,6 +400,7 @@ echo -	list of groups on the computer
 		net localgroup | findstr /r /v "^$" >> %results%
     echo ^</div^>^</p^>>> %results%
 
+TITLE Pilfering: Network Details
 echo ^<h2^>>> %results%
 echo ^<section id="network-details"^>NETWORK DETAILS^</section^>^</h2^>^<p^>^<a class="plain" href="#top"^>top^</a^>^</p^>>> %results%
 
@@ -485,6 +491,7 @@ echo -	firewall status
 		)
     echo ^</div^>^</p^>>> %results%
 
+TITLE Pilfering: Registry Hives
 echo ^<h2^>>> %results%
 echo ^<section id="registry"^>REGISTRY^</section^>^</h2^>^<p^>^<a class="plain" href="#top"^>top^</a^>^</p^>>> %results%
 
@@ -511,6 +518,7 @@ echo -	SAM, SYSTEM and SECURITY hives for NTLM hash extractions
 ::	        START /W "RawCopy" "%~dp0RawCopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:"%~dp0\%%x\"
 ::        )
 ::	echo. >> %results%
+TITLE Finished pilfering...
 echo ^<h2^>>> %results%
 echo ^<section id="end-of-collection"^>>> %results%
 echo END OF EVIDENCE COLLECTION >> %results%
