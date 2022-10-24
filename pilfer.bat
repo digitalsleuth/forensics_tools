@@ -8,12 +8,12 @@
 :: ** (right click and select "Run as administrator")
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Corey Forman - 2022-10-23 ************************************
+:: ** Ongoing maintenance: Corey Forman - 2022-10-24 ************************************
 :: **************************************************************************************
-:: ** Version 2.3 ***********************************************************************
+:: ** Version 2.4 ***********************************************************************
 
 setlocal
-set version=2.3
+set version=2.4
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
@@ -115,7 +115,7 @@ for %%l in (
 "<!DOCTYPE html>"
 "<html>"
 "<head>"
-"<title>Acquisition Results - %datetime%</title>"
+"<title>%datetime%</title>"
 "<style>"
 "body {"
 "  background-color: white;"
@@ -132,7 +132,7 @@ for %%l in (
 "  text-align: left;"
 "  outline: none;"
 "  font-size: 15px;"
-"  border-radius: 5px;"
+"  border-radius: 10px;"
 "}"
 ".active, .collapsible:hover {"
 "  background-color: #1644b9;"
@@ -140,8 +140,11 @@ for %%l in (
 ".content {"
 "  padding: 0 18px;"
 "  display: none;"
-"  overflow: hidden;"
 "  white-space: pre;"
+"}"
+".btn-header {"
+"  text-align: center;"
+"  font-size: 14px;"
 "}"
 "h1 {"
 "  color: #1644b9;"
@@ -170,7 +173,7 @@ for %%l in (
 "  text-align: center;"
 "  text-decoration: none;"
 "  display: inline-block;"
-"  border-radius: 5px;"
+"  border-radius: 10px;"
 "}"
 "a.button:hover, a.button:active {"
 "  background-color: #1644b9;"
@@ -221,7 +224,7 @@ echo ^<button type="button" class="light-button" onclick="lightMode()"^>^</butto
 echo ^<h1^>>> %results%
 echo ^<button type="button" class="collapsible"^>^<section id="top"^>%initiation_time%^</section^>^</button^>>> %results%
 echo ^</h1^>>> %results%
-echo ^<div style="text-align:center"^>^<a class="button" href="#physical-system-details"^>Physical System Details^</a^>  ^<a class="button" href="#soft-proc-task"^>Software, Processes and Tasks^</a^>   ^<a class="button" href="#user-details"^>User Details^</a^>   ^<a class="button" href="#network-details"^>Network Details^</a^>   ^<a class="button" href="#registry"^>Registry^</a^>   ^<a class="button" href="#end-of-collection"^>End of Collection Details^</a^>^</div^>>> %results%
+echo ^<div style="text-align:center"^>^<p^>^<a class="button" href="#physical-system-details"^>Physical System Details^</a^> ^<a class="button" href="#soft-proc-task"^>Software, Processes and Tasks^</a^> ^<a class="button" href="#user-details"^>User Details^</a^> ^<a class="button" href="#network-details"^>Network Details^</a^> ^<a class="button" href="#registry"^>Registry^</a^> ^<a class="button" href="#end-of-collection"^>End of Collection Details^</a^>^</p^>^</div^>>> %results%
 echo ^<button type="button" class="collapsible"^>Investigation Details^</button^>>> %results%
 echo ^<div class="content"^>^<p^>>> %results%
 echo INVESTIGATOR	 : %input1% >> %results%
@@ -231,7 +234,7 @@ echo CORRECT DATE	 : %fulldate% >> %results%
 echo CORRECT TIME	 : %fulltime% >> %results%
 echo SYSTEM TZ	 : %tzcheck% >> %results%
 echo CURR TZ OFFSET: UTC %tzoffsethrs% >> %results%
-echo EXHIBIT INFO	: %input5% >> %results%
+echo EXHIBIT INFO	 : %input5% >> %results%
 echo ^</div^>^</p^>>> %results%
 goto startprocess
 
@@ -544,12 +547,10 @@ for %%l in (
 "}"
 "function darkMode() {"
 "  var element = document.body;"
-"  var content = document.getElementById("DarkModetext");"
 "  element.className = "dark-mode";"
 "}"
 "function lightMode() {"
 "  var element = document.body;"
-"  var content = document.getElementById("DarkModetext");"
 "  element.className = "light-mode";"
 "}"
 "</script>"
