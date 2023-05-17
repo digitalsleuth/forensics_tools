@@ -7,3 +7,5 @@ Various short scripts and tools used for Digital Forensics
 - pilfer.bat - Incident Response batch file for grabbing relevant available data on a live system.
 - vssmount.cmd - A CMD script to be run in Windows to mount the local Volume Shadows, including any mounted devices which have Shadows
 - gooloc.py - A Google Location JSON parser to export Google Location data to CSV and KML data.
+
+rawccopy.exe is a pre-built binary from the source code at https://github.com/dr-anoroc/rawccopy and is intended to be used with pilfer, to extract locked files.
