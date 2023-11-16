@@ -9,12 +9,12 @@
 :: ** rawccopy source: https://github.com/dr-anoroc/rawccopy
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Corey Forman - 2023-05-16 ************************************
+:: ** Ongoing maintenance: Corey Forman - 2023-11-15 ************************************
 :: **************************************************************************************
-:: ** Version 3.0 ***********************************************************************
+:: ** Version 3.1 ***********************************************************************
 
 setlocal
-set version=3.0
+set version=3.1
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
@@ -53,57 +53,57 @@ echo.
 goto entername
 
 :entername
-set /p "input1=Enter your name and title: "
+set /p "name=Enter your name and title: "
 echo.
-set /p "answer1=You entered %input1%, is this correct [Y]/n: "
+set /p "answername=You entered %name%, is this correct [Y]/n: "
 echo.
-   if /i "%answer1:~,1%" EQU "y" goto enterfile
-   if /i "%answer1%" EQU "" goto enterfile
-   if /i "%answer1:~,1%" EQU "n" goto entername
+   if /i "%answername:~,1%" EQU "y" goto enterfile
+   if /i "%answername%" EQU "" goto enterfile
+   if /i "%answername:~,1%" EQU "n" goto entername
 
 :enterfile
-set /p "input2=Enter your File #: "
+set /p "filenum=Enter your File #: "
 echo.
-set /p "answer2=You entered %input2%, is this correct [Y]/n: "
+set /p "answerfilenum=You entered %filenum%, is this correct [Y]/n: "
 echo.
-   if /i "%answer2:~,1%" EQU "y" goto currentdt
-   if /i "%answer2%" EQU "" goto currentdt
-   if /i "%answer2:~,1%" EQU "n" goto enterfile
+   if /i "%answerfilenum:~,1%" EQU "y" goto currentdt
+   if /i "%answerfilenum%" EQU "" goto currentdt
+   if /i "%answerfilenum:~,1%" EQU "n" goto enterfile
 
 :currentdt
 set datetime=%fulldate% %fulltime% %tzcheck%
 set /p "answerdt=Date/Time on this system when script initiated was %datetime%, is this correct [Y]/n: "
 echo.
-   if /i "%answerdt:~,1%" EQU "y" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
-   if /i "%answerdt%" EQU "" set "input3=SYSTEM DATE IS CORRECT" && set "input4=SYSTEM TIME IS CORRECT" && goto enterexhibit
+   if /i "%answerdt:~,1%" EQU "y" set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
+   if /i "%answerdt%" EQU "" set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
    if /i "%answerdt:~,1%" EQU "n" set "datetime=NOT ACCURATE" && goto enterdate
 
 :enterdate
-set /p "input3=Enter current correct date (yyyy-mm-dd): "
+set /p "currentdate=Enter current correct date (yyyy-mm-dd): "
 echo.
-set /p "answer3=You entered %input3%, is this correct [Y]/n: "
+set /p "answerdate=You entered %currentdate%, is this correct [Y]/n: "
 echo.
-   if /i "%answer3:~,1%" EQU "y" set "fulldate=%input3%" && goto entertime
-   if /i "%answer3%" EQU "" set "fulldate=%input3%" && goto entertime
-   if /i "%answer3:~,1%" EQU "n" goto enterdate
+   if /i "%answerdate:~,1%" EQU "y" set "fulldate=%currentdate%" && goto entertime
+   if /i "%answerdate%" EQU "" set "fulldate=%currentdate%" && goto entertime
+   if /i "%answerdate:~,1%" EQU "n" goto enterdate
 
 :entertime
-set /p "input4=Enter current correct time (HH-MM-SS): "
+set /p "currenttime=Enter current correct time (HH-MM-SS): "
 echo.
-set /p "answer4=You entered %input4%, is this correct [Y]/n: "
+set /p "answertime=You entered %currenttime%, is this correct [Y]/n: "
 echo.
-   if /i "%answer4:~,1%" EQU "y" set "fulltime=%input4%" && goto enterexhibit
-   if /i "%answer4%" EQU "" set "fulltime=%input4%" && goto enterexhibit
-   if /i "%answer4:~,1%" EQU "n" goto entertime
+   if /i "%answertime:~,1%" EQU "y" set "fulltime=%currenttime%" && goto enterexhibit
+   if /i "%answertime%" EQU "" set "fulltime=%currenttime%" && goto enterexhibit
+   if /i "%answertime:~,1%" EQU "n" goto entertime
 
 :enterexhibit
-set /p "input5=Enter descriptive info about this Exhibit: "
+set /p "description=Enter descriptive info about this Exhibit: "
 echo.
-set /p "answer5=You entered %input5%, is this correct [Y]/n: "
+set /p "answerdescription=You entered %description%, is this correct [Y]/n: "
 echo.
-   if /i "%answer5:~,1%" EQU "y" goto userhivebool
-   if /i "%answer5%" EQU "" goto userhivebool
-   if /i "%answer5:~,1%" EQU "n" goto enterexhibit
+   if /i "%answerdescription:~,1%" EQU "y" goto userhivebool
+   if /i "%answerdescription%" EQU "" goto userhivebool
+   if /i "%answerdescription:~,1%" EQU "n" goto enterexhibit
 
 :userhivebool
 set /p "grabhives=Do you have rawccopy.exe in the current directory, AND want to grab ALL user NTUSER and UsrClass hives? y/[N]: "
@@ -121,7 +121,7 @@ for %%l in (
 "<!DOCTYPE html>"
 "<html>"
 "<head>"
-"<title>%datetime%</title>"
+"<title>%filenum% %datetime%</title>"
 "<style>"
 "body {"
 "  background-color: white;"
@@ -129,7 +129,7 @@ for %%l in (
 "  font-size: 12px;"
 "}"
 ".collapsible {"
-"  background-color: #777;"
+"  background-color: #1971f4;"
 "  color: white;"
 "  cursor: pointer;"
 "  padding: 18px;"
@@ -173,7 +173,7 @@ for %%l in (
 "  white-space: pre;"
 "}"
 "a.button:link, a.button:visited {"
-"  background-color: #777;"
+"  background-color: #1971f4;"
 "  color: white;"
 "  padding: 14px 25px;"
 "  text-align: center;"
@@ -257,14 +257,14 @@ echo ^<div style="text-align:center"^>^<p^>^<a class="button" href="#physical-sy
 echo ^<button type="button" class="collapsible"^>Investigation Details^</button^>>> %results%
 echo ^<div class="content"^>^<div class="cmd-box"^>^<p^> >> %results%
 echo ^<textarea class="cmd-content" cols="80" rows="24" readonly="true" spellcheck="false"^> >> %results%
-echo INVESTIGATOR	 : %input1% >> %results%
-echo FILE NUMBER	 : %input2% >> %results%
+echo INVESTIGATOR	 : %name% >> %results%
+echo FILE NUMBER	 : %filenum% >> %results%
 echo SYSTEM TIME	 : %datetime% >> %results%
 echo CORRECT DATE	 : %fulldate% >> %results%
 echo CORRECT TIME	 : %fulltime% >> %results%
 echo SYSTEM TZ	 : %tzcheck% >> %results%
 echo CURR TZ OFFSET   : UTC %tzoffsethrs% >> %results%
-echo EXHIBIT INFO	 : %input5% >> %results%
+echo EXHIBIT INFO	 : %description% >> %results%
 echo ^</textarea^>^</p^>^</div^>^</div^> >> %results%
 goto startprocess
 
@@ -509,7 +509,7 @@ echo -	network information including wireless
 		netsh wlan show profiles * key=clear >> %results%
 		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
 		echo Looking for XML files in %wlansvc% and copying info >> %results%
-		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %workingdir%\%outputfolder%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
+		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %out%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
 		netsh wlan show wirelesscapabilities >> %results% 1>nul
 		netsh wlan show interfaces >> %results% 1>nul
 		mkdir %wlanreport%
@@ -587,7 +587,7 @@ echo -	firewall status
 	call :textarea
 		netsh advfirewall show allprofiles >> %results%
 		if exist %systemroot%\system32\LogFiles\Firewall\pfirewall.log ( 
-			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %workingdir%\%outputfolder%\ 1>nul
+			copy %systemroot%\system32\LogFiles\Firewall\pfirewall.log %out%\ 1>nul
 		) else ( echo No Firewall Log Found in %systemroot%\system32\LogFiles\Firewall\ >> %results%
 		)
     call :closediv
@@ -601,16 +601,16 @@ echo -	SAM, SYSTEM, SECURITY and SOFTWARE hives
 	call :opendiv
 	call :textarea
         echo 	-	Extracting SAM hive
-		reg save hklm\sam %workingdir%\%outputfolder%\sam_%outputfolder% >> %results%
+		reg save hklm\sam %out%\sam_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SAM hive successfully extracted >> %results%
         echo 	-	Extracting SYSTEM hive
-		reg save hklm\system %workingdir%\%outputfolder%\system_%outputfolder% >> %results%
+		reg save hklm\system %out%\system_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SYSTEM hive successfully extracted >> %results%
         echo 	-	Extracting SECURITY hive
-		reg save hklm\security %workingdir%\%outputfolder%\security_%outputfolder% >> %results%
+		reg save hklm\security %out%\security_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SECURITY hive successfully extracted >> %results%
         echo 	-	Extracting SOFTWARE hive
-		reg save hklm\software %workingdir%\%outputfolder%\software_%outputfolder% >> %results%
+		reg save hklm\software %out%\software_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SOFTWARE hive successfully extracted >> %results%
     call :closediv
 
@@ -657,6 +657,7 @@ for %%l in (
 echo ^</body^>>> %results%
 echo ^</html^>>> %results%
 echo ===DONE===
+msg %username% Pilfer acquisition done for file %filenum%.
 timeout /t 5
 endlocal
 EXIT /B
@@ -681,19 +682,19 @@ echo -	NTUSER.DAT and UsrClass.dat hive extraction
 	FOR /f "usebackq" %%x in (
 		`dir /B %SystemDrive%\Users\`
 	) DO (
-		mkdir %workingdir%\%outputfolder%\%%x
+		mkdir %out%\%%x
 		echo 	-	Extracting NTUSER.DAT for %%x
-		START /W /B "Pilfering NTUSER.DAT for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:%workingdir%\%outputfolder%\%%x >> %results%
+		START /W /B "Pilfering NTUSER.DAT for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:%out%\%%x >> %results%
 		echo 	-	Extracting ntuser.dat.LOG1 for %%x
-		START /W /B "Pilfering ntuser.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG1 /OutputPath:%workingdir%\%outputfolder%\%%x >> %results%
+		START /W /B "Pilfering ntuser.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG1 /OutputPath:%out%\%%x >> %results%
 		echo 	-	Extracting ntuser.dat.LOG2 for %%x
-		START /W /B "Pilfering ntuser.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG2 /OutputPath:%workingdir%\%outputfolder%\%%x >> %results%
+		START /W /B "Pilfering ntuser.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG2 /OutputPath:%out%\%%x >> %results%
 		echo 	-	Extracting UsrClass.dat for %%x
-		START /W /B "Pilfering UsrClass.dat for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat /OutputPath:%workingdir%\%outputfolder%\%%x >> %results%
+		START /W /B "Pilfering UsrClass.dat for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat /OutputPath:%out%\%%x >> %results%
 		echo 	-	Extracting UsrClass.dat.LOG1 for %%x
-		START /W /B "Pilfering UsrClass.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG1 /OutputPath:%workingdir%\%outputfolder%\%%x >> %results%
+		START /W /B "Pilfering UsrClass.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG1 /OutputPath:%out%\%%x >> %results%
 		echo 	-	Extracting UsrClass.dat.LOG2 for %%x
-		START /W /B "Pilfering UsrClass.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG2 /OutputPath:%workingdir%\%outputfolder%\%%x >> %results%
+		START /W /B "Pilfering UsrClass.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG2 /OutputPath:%out%\%%x >> %results%
 	) 
 	call :closediv
 goto :eof
