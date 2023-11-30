@@ -9,12 +9,12 @@
 :: ** rawccopy source: https://github.com/dr-anoroc/rawccopy
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Ongoing maintenance: Corey Forman - 2023-11-15 ************************************
+:: ** Current build: Corey Forman - 2023-11-27 ******************************************
 :: **************************************************************************************
-:: ** Version 3.1 ***********************************************************************
+:: ** Version 3.2 ***********************************************************************
 
 setlocal
-set version=3.1
+set version=3.2
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
@@ -116,12 +116,14 @@ set out=%workingdir%\%outputfolder%
 set wlanreport=%out%\wlan-report
 set results=%out%\Acquisition_Results.html
 mkdir %out%
+mkdir %out%\wlan-config
+mkdir %out%\systeminfo
 
 for %%l in (
 "<!DOCTYPE html>"
 "<html>"
 "<head>"
-"<title>%filenum% %datetime%</title>"
+"<title>FILE-%filenum% %datetime%</title>"
 "<style>"
 "body {"
 "  background-color: white;"
@@ -291,8 +293,8 @@ echo -	full system details
 	echo ^<button type="button" class="collapsible"^>^<section id="full-system-details"^>FULL SYSTEM INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-	msinfo32 /report %out%\full-system-info.txt
-	type %out%\full-system-info.txt>> %results%
+	msinfo32 /report %out%\systeminfo\full-system-info.txt
+	type %out%\systeminfo\full-system-info.txt>> %results%
     call :closediv
 
 echo -	basic system information
@@ -352,6 +354,32 @@ echo -	volume details
 		mountvol | findstr "\ *" >> %results%
     call :closediv
 
+echo - 	volume file layout
+    echo ^<button type="button" class="collapsible"^>^<section id="volume-file-layout"^>VOLUME FILE LAYOUT^</section^>^</button^>>> %results%
+    call :opendiv
+    call :textarea
+        fsutil volume allocationReport %SYSTEMDRIVE% >> %results%
+    call :closediv
+
+echo - 	file system information
+	echo ^<button type="button" class="collapsible"^>^<section id="file-system-info"^>FILE SYSTEM INFO^</section^>^</button^>>> %results%
+	call :opendiv
+	call :textarea
+    setlocal enabledelayedexpansion
+    for /f "tokens=*" %%a in ('fsutil fsinfo drives') do (
+		for %%b in (%%a) do (
+			set "token=%%b"
+			if "!token:~1,1!"==":" (
+				echo !token:~0,2! Drive >> %results%
+				echo ---------- >> %results%
+				fsutil fsinfo ntfsinfo !token:~0,2! >> %results%
+				echo ---------- >> %results%
+			)
+		)
+	)
+	endlocal
+	call :closediv
+
 echo -	plug and play devices
     echo ^<button type="button" class="collapsible"^>^<section id="pnp-info"^>PLUG AND PLAY DEVICES^</section^>^</button^>>> %results%
 	call :opendiv
@@ -365,6 +393,15 @@ echo -	BitLocker configuration
 	call :textarea
 		manage-bde -status %SystemDrive% >> %results%
 		manage-bde -protectors -get %SystemDrive% >> %results%
+    call :closediv
+
+echo -	Encrypting File System settings
+	echo ^<button type="button" class="collapsible"^>^<section id="encrypting-file-system-info"^>ENCRYPTING FILE SYSTEM STATUS^</section^>^</button^>>> %results%
+    call :opendiv
+    call :textarea
+        fsutil behavior query disableEncryption >> %results%
+        fsutil behavior query encryptPagingFile >> %results%
+        cipher /u /n /h >> %results%
     call :closediv
 
 echo -	shadow copy details
@@ -509,7 +546,7 @@ echo -	network information including wireless
 		netsh wlan show profiles * key=clear >> %results%
 		set wlansvc=C:\ProgramData\Microsoft\Wlansvc
 		echo Looking for XML files in %wlansvc% and copying info >> %results%
-		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %out%\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
+		dir /b /s %wlansvc% 2>nul | >nul findstr ".xml" && (@echo Found the following XML profiles >> %results%) && (findstr /I /C:"<name>" /S C:\ProgramData\Microsoft\Wlansvc\*.xml >> %results% 2>nul) && (@echo Copying to output folder >> %results%  && (for /F %%G in ('dir /B /S C:\ProgramData\Microsoft\Wlansvc\*.xml') do copy %%G %out%\wlan-config\) 1>nul 2>>%results%) || (@echo No XML profiles found. >> %results%)
 		netsh wlan show wirelesscapabilities >> %results% 1>nul
 		netsh wlan show interfaces >> %results% 1>nul
 		mkdir %wlanreport%
@@ -595,29 +632,29 @@ echo -	firewall status
 TITLE Pilfering: Registry Hives
 echo ^<h2^>>> %results%
 echo ^<section id="registry"^>REGISTRY^</section^>^</h2^>^<p^>^<a class="plain" href="#top"^>top^</a^>^</p^>>> %results%
-
+mkdir %out%\registry
 echo -	SAM, SYSTEM, SECURITY and SOFTWARE hives
     echo ^<button type="button" class="collapsible"^>^<section id="registry-hive-extractions"^>SAM, SYSTEM, SECURITY and SOFTWARE HIVE EXTRACTION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
         echo 	-	Extracting SAM hive
-		reg save hklm\sam %out%\sam_%outputfolder% >> %results%
+		reg save hklm\sam %out%\registry\sam_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SAM hive successfully extracted >> %results%
         echo 	-	Extracting SYSTEM hive
-		reg save hklm\system %out%\system_%outputfolder% >> %results%
+		reg save hklm\system %out%\registry\system_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SYSTEM hive successfully extracted >> %results%
         echo 	-	Extracting SECURITY hive
-		reg save hklm\security %out%\security_%outputfolder% >> %results%
+		reg save hklm\security %out%\registry\security_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SECURITY hive successfully extracted >> %results%
         echo 	-	Extracting SOFTWARE hive
-		reg save hklm\software %out%\software_%outputfolder% >> %results%
+		reg save hklm\software %out%\registry\software_%outputfolder% >> %results%
 		if %errorlevel% == 0 echo SOFTWARE hive successfully extracted >> %results%
     call :closediv
 
 if /i "%grabhives:~,1%" EQU "y" ( 
-   call :userhives
+    call :userhives
 ) else (
-   echo null>nul
+    echo null>nul
 )
 
 TITLE Finished pilfering...
@@ -682,19 +719,19 @@ echo -	NTUSER.DAT and UsrClass.dat hive extraction
 	FOR /f "usebackq" %%x in (
 		`dir /B %SystemDrive%\Users\`
 	) DO (
-		mkdir %out%\%%x
+		mkdir %out%\registry\%%x
 		echo 	-	Extracting NTUSER.DAT for %%x
-		START /W /B "Pilfering NTUSER.DAT for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:%out%\%%x >> %results%
+		START /W /B "Pilfering NTUSER.DAT for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\NTUSER.DAT /OutputPath:%out%\registry\%%x >> %results%
 		echo 	-	Extracting ntuser.dat.LOG1 for %%x
-		START /W /B "Pilfering ntuser.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG1 /OutputPath:%out%\%%x >> %results%
+		START /W /B "Pilfering ntuser.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG1 /OutputPath:%out%\registry\%%x >> %results%
 		echo 	-	Extracting ntuser.dat.LOG2 for %%x
-		START /W /B "Pilfering ntuser.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG2 /OutputPath:%out%\%%x >> %results%
+		START /W /B "Pilfering ntuser.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\ntuser.dat.LOG2 /OutputPath:%out%\registry\%%x >> %results%
 		echo 	-	Extracting UsrClass.dat for %%x
-		START /W /B "Pilfering UsrClass.dat for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat /OutputPath:%out%\%%x >> %results%
+		START /W /B "Pilfering UsrClass.dat for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat /OutputPath:%out%\registry\%%x >> %results%
 		echo 	-	Extracting UsrClass.dat.LOG1 for %%x
-		START /W /B "Pilfering UsrClass.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG1 /OutputPath:%out%\%%x >> %results%
+		START /W /B "Pilfering UsrClass.dat.LOG1 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG1 /OutputPath:%out%\registry\%%x >> %results%
 		echo 	-	Extracting UsrClass.dat.LOG2 for %%x
-		START /W /B "Pilfering UsrClass.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG2 /OutputPath:%out%\%%x >> %results%
+		START /W /B "Pilfering UsrClass.dat.LOG2 for %%x" "%~dp0rawccopy.exe" /FileNamePath:%SystemDrive%\Users\%%x\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG2 /OutputPath:%out%\registry\%%x >> %results%
 	) 
 	call :closediv
 goto :eof
