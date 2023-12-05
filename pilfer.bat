@@ -9,12 +9,12 @@
 :: ** rawccopy source: https://github.com/dr-anoroc/rawccopy
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Current build: Corey Forman - 2023-11-27 ******************************************
+:: ** Current build: Corey Forman - 2023-12-03 ******************************************
 :: **************************************************************************************
-:: ** Version 3.2 ***********************************************************************
+:: ** Version 3.3 ***********************************************************************
 
 setlocal
-set version=3.2
+set version=3.3
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
@@ -354,14 +354,14 @@ echo -	volume details
 		mountvol | findstr "\ *" >> %results%
     call :closediv
 
-echo - 	volume file layout
+echo -	volume file layout
     echo ^<button type="button" class="collapsible"^>^<section id="volume-file-layout"^>VOLUME FILE LAYOUT^</section^>^</button^>>> %results%
     call :opendiv
     call :textarea
         fsutil volume allocationReport %SYSTEMDRIVE% >> %results%
     call :closediv
 
-echo - 	file system information
+echo -	file system information
 	echo ^<button type="button" class="collapsible"^>^<section id="file-system-info"^>FILE SYSTEM INFO^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
@@ -421,7 +421,7 @@ echo -	shadow copy details
 		vssadmin list writers >> %results%
     call :closediv
 
-echo - 	Windows Defender Status
+echo -	Windows Defender Status
 	echo ^<button type="button" class="collapsible"^>^<section id="defender-info"^>WINDOWS DEFENDER STATUS^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
@@ -442,6 +442,13 @@ echo -	installed software
 	call :opendiv
 	call :textarea
 		wmic product get Name,Version,InstallDate,InstallLocation,InstallSource,LocalPackage,IdentifyingNumber,PackageCode,PackageName | more >> %results%
+    call :closediv
+
+echo -	installed hot-fixes
+    echo ^< button type="button" class="collapsible"^>^<section id="installed-hot-fixes"^>INSTALLED HOT-FIXES^</section^>^</button^>>> %results%
+    call :opendiv
+    call :textarea
+        wmic qfe list >> %results%
     call :closediv
 
 echo -	open or locked files
