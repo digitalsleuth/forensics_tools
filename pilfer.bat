@@ -9,12 +9,12 @@
 :: ** rawccopy source: https://github.com/dr-anoroc/rawccopy
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Current build: Corey Forman - 2023-12-03 ******************************************
+:: ** Current build: Corey Forman - 2024-04-19 ******************************************
 :: **************************************************************************************
-:: ** Version 3.3 ***********************************************************************
+:: ** Version 3.4 ***********************************************************************
 
 setlocal
-set version=3.3
+set version=3.4
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
@@ -29,6 +29,7 @@ set hour=%fulldatetime:~8,2%
 set min=%fulldatetime:~10,2%
 set sec=%fulldatetime:~12,2%
 set fulltime=%hour%-%min%-%sec%
+set starttime=%time%
 set tzoffset=%fulldatetime:~-5%
 set /A tzoffsethrs=%tzoffset% / 60
 
@@ -36,7 +37,7 @@ goto admin
 :admin
     net session >nul 2>&1
     if %errorLevel% == 0 (
-	    set initiation_time=Acquisition initiated at SYSTEM-TIME: %fulldate% %fulltime% %tzcheck% - Current Offset UTC %tzoffsethrs%
+	    set initiation_time=Acquisition initiated at SYSTEM-TIME: %fulldate% %starttime% %tzcheck% - Current Offset UTC %tzoffsethrs%
 		goto cwd
     ) else (
         echo This script requires administrator privileges. Run as admin, and try again. Exiting.
@@ -55,7 +56,7 @@ goto entername
 :entername
 set /p "name=Enter your name and title: "
 echo.
-set /p "answername=You entered %name%, is this correct [Y]/n: "
+set /p "answername=You entered %name%, is this correct? [Y]/n: "
 echo.
    if /i "%answername:~,1%" EQU "y" goto enterfile
    if /i "%answername%" EQU "" goto enterfile
@@ -64,7 +65,7 @@ echo.
 :enterfile
 set /p "filenum=Enter your File #: "
 echo.
-set /p "answerfilenum=You entered %filenum%, is this correct [Y]/n: "
+set /p "answerfilenum=You entered %filenum%, is this correct? [Y]/n: "
 echo.
    if /i "%answerfilenum:~,1%" EQU "y" goto currentdt
    if /i "%answerfilenum%" EQU "" goto currentdt
@@ -72,7 +73,7 @@ echo.
 
 :currentdt
 set datetime=%fulldate% %fulltime% %tzcheck%
-set /p "answerdt=Date/Time on this system when script initiated was %datetime%, is this correct [Y]/n: "
+set /p "answerdt=Date/Time on this system when script initiated was %date% %starttime%, is this the correct time? [Y]/n: "
 echo.
    if /i "%answerdt:~,1%" EQU "y" set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
    if /i "%answerdt%" EQU "" set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
@@ -445,7 +446,7 @@ echo -	installed software
     call :closediv
 
 echo -	installed hot-fixes
-    echo ^< button type="button" class="collapsible"^>^<section id="installed-hot-fixes"^>INSTALLED HOT-FIXES^</section^>^</button^>>> %results%
+    echo ^<button type="button" class="collapsible"^>^<section id="installed-hot-fixes"^>INSTALLED HOT-FIXES^</section^>^</button^>>> %results%
     call :opendiv
     call :textarea
         wmic qfe list >> %results%
@@ -543,8 +544,10 @@ echo -	network information including wireless
 	call :textarea
 	echo. >> %results%
 		ipconfig /all >> %results%
-		echo wmic nicconfig >> %results%
 		wmic nicconfig get description,IPAddress,MACaddress | findstr /I /C:":" >> %results%
+        echo Host ISP and external IP info >> %results%
+        powershell -nop irm ipinfo.io >> %results%
+        nslookup myip.opendns.com resolver1.opendns.com >> %results%
     call :closediv
     echo ^<button type="button" class="collapsible"^>^<section id="wireless-network-info"^>WIRELESS NETWORK INFO^</section^>^</button^>>> %results%
 	call :opendiv
@@ -622,7 +625,7 @@ echo -	historical IP addresses
     echo ^<button type="button" class="collapsible"^>^<section id="historical-ips"^>HISTORICAL IP'S FROM DELIVERY OPTIMIZATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		powershell -c "Get-DeliveryOptimizationLog | ? Message -Like "*ExternalIpAddress*" | select TimeCreated,ProcessId,ThreadId,Message" | findstr /r /v "^$" >> %results%
+		powershell -c "Get-DeliveryOptimizationLog | ? Message -Like "*ExternalIpAddress*" | Format-Table -Property TimeCreated,ProcessId,ThreadId,Message -Wrap" | findstr /r /v "^$" >> %results%
     call :closediv
 
 echo -	firewall status
