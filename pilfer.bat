@@ -9,35 +9,31 @@
 :: ** rawccopy source: https://github.com/dr-anoroc/rawccopy
 :: **************************************************************************************
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
-:: ** Current build: Corey Forman - 2024-04-19 ******************************************
+:: ** Current build: Corey Forman - 2025-03-02 ******************************************
 :: **************************************************************************************
-:: ** Version 3.4 ***********************************************************************
+:: ** Version 4.0 ***********************************************************************
 
 setlocal
-set version=3.4
+set version=4.0
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
-for /f "usebackq tokens=1,2 delims=,= " %%i in (`wmic os get LocalDateTime /value`) do @if %%i==LocalDateTime (
-     set fulldatetime=%%j
+for /f "usebackq tokens=*" %%i in (`powershell -c "(Get-Date -Format \"yyyy-MM-dd HH-mm-ss\")"`) do (
+     set fulldatetime=%%i
 )
 for /f "tokens=*" %%a in ('tzutil /g') do set tzcheck=%%a
-set year=%fulldatetime:~0,4%
-set month=%fulldatetime:~4,2%
-set day=%fulldatetime:~6,2%
-set fulldate=%year%-%month%-%day%
-set hour=%fulldatetime:~8,2%
-set min=%fulldatetime:~10,2%
-set sec=%fulldatetime:~12,2%
-set fulltime=%hour%-%min%-%sec%
+for /f "usebackq tokens=*" %%j in (`powershell -c "(Get-TimeZone).BaseUtcOffset.TotalMinutes /60"`) do (
+    set tzoffsethrs=%%j
+)
+set fulldate=%fulldatetime:~0,10%
+set fulltime=%fulldatetime:~11,8%
 set starttime=%time%
-set tzoffset=%fulldatetime:~-5%
-set /A tzoffsethrs=%tzoffset% / 60
+set datetime=%fulldatetime% %tzcheck% UTC %tzoffsethrs%
 
 goto admin
 :admin
     net session >nul 2>&1
     if %errorLevel% == 0 (
-	    set initiation_time=Acquisition initiated at SYSTEM-TIME: %fulldate% %starttime% %tzcheck% - Current Offset UTC %tzoffsethrs%
+	    set initiation_time=Acquisition initiated at SYSTEM-TIME: %datetime%
 		goto cwd
     ) else (
         echo This script requires administrator privileges. Run as admin, and try again. Exiting.
@@ -56,58 +52,54 @@ goto entername
 :entername
 set /p "name=Enter your name and title: "
 echo.
-set /p "answername=You entered %name%, is this correct? [Y]/n: "
+choice /c yn /M "You entered %name%, is this correct"
 echo.
-   if /i "%answername:~,1%" EQU "y" goto enterfile
-   if /i "%answername%" EQU "" goto enterfile
-   if /i "%answername:~,1%" EQU "n" goto entername
+   if %ERRORLEVEL% EQU 1 goto enterfile
+   if %ERRORLEVEL% EQU 2 goto entername
 
 :enterfile
 set /p "filenum=Enter your File #: "
 echo.
-set /p "answerfilenum=You entered %filenum%, is this correct? [Y]/n: "
+choice /c yn /M "You entered %filenum%, is this correct"
 echo.
-   if /i "%answerfilenum:~,1%" EQU "y" goto currentdt
-   if /i "%answerfilenum%" EQU "" goto currentdt
-   if /i "%answerfilenum:~,1%" EQU "n" goto enterfile
+   if %ERRORLEVEL% EQU 1 goto currentdt
+   if %ERRORLEVEL% EQU 2 goto enterfile
 
 :currentdt
-set datetime=%fulldate% %fulltime% %tzcheck%
-set /p "answerdt=Date/Time on this system when script initiated was %date% %starttime%, is this the correct time? [Y]/n: "
+choice /c yn /M "Date/Time on this system when script initiated was %datetime%, is this the correct time"
 echo.
-   if /i "%answerdt:~,1%" EQU "y" set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
-   if /i "%answerdt%" EQU "" set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
-   if /i "%answerdt:~,1%" EQU "n" set "datetime=NOT ACCURATE" && goto enterdate
+   if %ERRORLEVEL% EQU 1 set "currentdate=SYSTEM DATE IS CORRECT" && set "currenttime=SYSTEM TIME IS CORRECT" && goto enterexhibit
+   if %ERRORLEVEL% EQU 2 set "datetime=NOT ACCURATE" && goto enterdate
 
 :enterdate
 set /p "currentdate=Enter current correct date (yyyy-mm-dd): "
 echo.
-set /p "answerdate=You entered %currentdate%, is this correct [Y]/n: "
+choice /c yn /M "You entered %currentdate%, is this correct"
 echo.
-   if /i "%answerdate:~,1%" EQU "y" set "fulldate=%currentdate%" && goto entertime
-   if /i "%answerdate%" EQU "" set "fulldate=%currentdate%" && goto entertime
-   if /i "%answerdate:~,1%" EQU "n" goto enterdate
+   if %ERRORLEVEL% EQU 1 set "fulldate=%currentdate%" && goto entertime
+   if %ERRORLEVEL% EQU 2 goto enterdate
 
 :entertime
 set /p "currenttime=Enter current correct time (HH-MM-SS): "
 echo.
-set /p "answertime=You entered %currenttime%, is this correct [Y]/n: "
+choice /c yn /M "You entered %currenttime%, is this correct"
 echo.
-   if /i "%answertime:~,1%" EQU "y" set "fulltime=%currenttime%" && goto enterexhibit
-   if /i "%answertime%" EQU "" set "fulltime=%currenttime%" && goto enterexhibit
-   if /i "%answertime:~,1%" EQU "n" goto entertime
+   if %ERRORLEVEL% EQU 1 set "fulltime=%currenttime%" && goto enterexhibit
+   if %ERRORLEVEL% EQU 2 goto entertime
 
 :enterexhibit
 set /p "description=Enter descriptive info about this Exhibit: "
 echo.
-set /p "answerdescription=You entered %description%, is this correct [Y]/n: "
+choice /c yn /M "You entered %description%, is this correct"
 echo.
-   if /i "%answerdescription:~,1%" EQU "y" goto userhivebool
-   if /i "%answerdescription%" EQU "" goto userhivebool
-   if /i "%answerdescription:~,1%" EQU "n" goto enterexhibit
+   if %ERRORLEVEL% EQU 1 goto userhivebool
+   if %ERRORLEVEL% EQU 2 goto enterexhibit
 
 :userhivebool
-set /p "grabhives=Do you have rawccopy.exe in the current directory, AND want to grab ALL user NTUSER and UsrClass hives? y/[N]: "
+choice /c yn /M "Do you have rawccopy.exe in the current directory, AND want to grab ALL user NTUSER and UsrClass hives"
+echo.
+   if %ERRORLEVEL% EQU 1 set "grabhives=y"
+   if %ERRORLEVEL% EQU 2 set "grabhives=n"
 echo.
 goto startoutput
 
@@ -249,7 +241,6 @@ for %%l in (
 "</head>"
 "<body>"
 ) do echo.%%~l >> %results%
-
 echo ^<section id="top"^>^</section^>>> %results%
 echo ^<div style="text-align:right"^>^<button type="button" class="dark-button" onclick="darkMode()"^>^</button^>>> %results%
 echo ^<button type="button" class="light-button" onclick="lightMode()"^>^</button^>^</div^>>> %results%
@@ -282,20 +273,19 @@ echo -	current system date and time
 	echo ^<button type="button" class="collapsible"^>^<section id="csdt"^>CURRENT SYSTEM DATE/TIME AND TIMEZONE^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		echo %date% %time: =0% >> %results%
+		echo %fulldatetime% >> %results%
 		echo. >> %results%
 		reg query "hklm\system\currentcontrolset\control\timezoneinformation" | findstr /r /v "^$" >> %results%
 		echo. >> %results%
-		wmic timezone get bias,caption,daylightbias,daylightname /format:table | findstr /r /v "^$" >> %results%
-		wmic os get currenttimezone /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "(Get-TimeZone)" >> %results%
     call :closediv
 
 echo -	full system details
 	echo ^<button type="button" class="collapsible"^>^<section id="full-system-details"^>FULL SYSTEM INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-	msinfo32 /report %out%\systeminfo\full-system-info.txt
-	type %out%\systeminfo\full-system-info.txt>> %results%
+		msinfo32 /report %out%\systeminfo\full-system-info.txt
+		type %out%\systeminfo\full-system-info.txt>> %results%
     call :closediv
 
 echo -	basic system information
@@ -305,53 +295,60 @@ echo -	basic system information
 		systeminfo >> %results%
     call :closediv
 
+echo -	OS information
+    echo ^<button type="button" class="collapsible"^>^<section id="os-info"^>OPERATING SYSTEM INFORMATION^</section^>^</button^>>> %results%
+    call :opendiv
+    call :textarea
+		powershell -c "(Get-CimInstance -ClassName Win32_OperatingSystem | select *)" >> %results%
+    call :closediv
+
 echo -	BIOS information
     echo ^<button type="button" class="collapsible"^>^<section id="bios-info"^>BIOS INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic bios get BIOSVersion,Caption,Description,Manufacturer,ReleaseDate,SerialNumber,Version /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "(Get-CimInstance -ClassName Win32_BIOS) | select *" >> %results%
     call :closediv
 
 echo -	last system boot time
     echo ^<button type="button" class="collapsible"^>^<section id="last-system-boot"^>LAST TIME SYSTEM WAS BOOTED^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic os get lastbootuptime | findstr /r /v "^$" >> %results%
+		powershell -c "(Get-CimInstance -ClassName Win32_OperatingSystem).LastBootupTime" >> %results%
     call :closediv
 	
 echo -	startup info
     echo ^<button type="button" class="collapsible"^>^<section id="startup-info"^>STARTUP INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic startup get * | findstr /r /v "^$" >> %results%
+		powershell -c "Get-CimInstance -ClassName Win32_StartupCommand | select Caption,Command,Location,User | Format-List" >> %results%
     call :closediv
 
 echo -	local physical disk configuration details
     echo ^<button type="button" class="collapsible"^>^<section id="physical-disk-info"^>PHYSICAL DISK INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic diskdrive get BytesPerSector,CapabilityDescriptions,Caption,DeviceID,FirmwareRevision,Index,InstallDate,InterfaceType,Manufacturer,MediaType,Model,Name,Partitions,PNPDeviceID,SerialNumber,Size /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "Get-CimInstance -ClassName Win32_DiskDrive |select DeviceId,Partitions,BytesPerSector,Size,Caption,FirmwareRevision,InterfaceType,PNPDeviceID,Manufacturer,Model,SerialNumber |Format-List" >> %results%
 	call :closediv
 	
 echo -	local logical disk configuration details
     echo ^<button type="button" class="collapsible"^>^<section id="logical-disk-info"^>LOGICAL DISK INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic logicaldisk get Caption,Compressed,Description,DeviceID,DriveType,FileSystem,FreeSpace,Name,Size,VolumeName,VolumeSerialNumber /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "Get-CimInstance -ClassName Win32_LogicalDisk -Filter "DriveType=3" |select Caption,Compressed,Description,DeviceID,DriveType,FileSystem,FreeSpace,Name,Size,VolumeName,VolumeSerialNumber | Format-List" >> %results%
 	call :closediv
 	
 echo -	partition details
     echo ^<button type="button" class="collapsible"^>^<section id="partition-info"^>PARTITION INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic partition get BlockSize,Caption,Description,DeviceID,DiskIndex,Name,Size,StartingOffset,SystemName,Type /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "Get-Partition | Select PartitionNumber,Size,Offset,IsSystem,IsHidden,IsBoot,MbrType,GptType,Guid,DriveLetter,DiskNumber,DiskId,UniqueId,DiskPath,ObjectId |Format-List" >> %results%
     call :closediv
 	
 echo -	volume details
     echo ^<button type="button" class="collapsible"^>^<section id="volume-info"^>VOLUME INFORMATION^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic volume get BlockSize,Capacity,Caption,DeviceID,DriveLetter,FileSystem,FreeSpace,Label,Name,SerialNumber,SystemVolume /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "Get-Volume | Select DriveLetter,DriveType,FileSystem,FileSystemLabel,AllocationUnitSize,Size,SizeRemaining,Path,ObjectId,UniqueId | Format-List" >> %results%
 		mountvol | findstr "\ *" >> %results%
     call :closediv
 
@@ -409,7 +406,6 @@ echo -	shadow copy details
     echo ^<button type="button" class="collapsible"^>^<section id="shadow-copy-info"^>SHADOW COPY DETAILS^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic shadowcopy get DeviceObject,ID,InstallDate,OriginatingMachine,ProviderID,SetID,VolumeName /format:table | findstr /r /v "^$"  >> %results%
         echo vssadmin list providers >> %results%
 		vssadmin list providers >> %results%
 		echo vssadmin list shadows >> %results%
@@ -442,14 +438,14 @@ echo -	installed software
 	echo ^<button type="button" class="collapsible"^>^<section id="full-system-details"^>INSTALLED SOFTWARE^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic product get Name,Version,InstallDate,InstallLocation,InstallSource,LocalPackage,IdentifyingNumber,PackageCode,PackageName | more >> %results%
+		powershell -c "$MyProgs = Get-ItemProperty 'HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*'; $MyProgs += Get-ItemProperty 'HKLM:SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'; $MyProgs.DisplayName | Sort-Object -Unique" >> %results%
     call :closediv
 
 echo -	installed hot-fixes
     echo ^<button type="button" class="collapsible"^>^<section id="installed-hot-fixes"^>INSTALLED HOT-FIXES^</section^>^</button^>>> %results%
     call :opendiv
     call :textarea
-        wmic qfe list >> %results%
+        powershell -c "Get-HotFix | Select Description,HotFixId,InstalledBy,InstalledOn | Format-List" >> %results%
     call :closediv
 
 echo -	open or locked files
@@ -464,7 +460,7 @@ echo -	currently running services
 	call :opendiv
 	call :textarea
 		net start >> %results%
-		wmic service get Name,PathName,ServiceType,StartMode /format:table | find /V "" | findstr /r /v "^$" >> %results%
+		powershell -c "Get-Service | Select Name,DisplayName,ServiceName,Status,StartType,ServiceType" >> %results%
     call :closediv
 	
 echo -	running processes
@@ -502,7 +498,7 @@ echo -	current user
     echo ^<button type="button" class="collapsible"^>^<section id="all-users"^>ALL USER ACCOUNTS^</section^>^</button^>>> %results%
 	call :opendiv
 	call :textarea
-		wmic useraccount get caption,domain,fullname,name,SID /format:table | findstr /r /v "^$" >> %results%
+		powershell -c "Get-LocalUser |Select Name,FullName,Description,Enabled,LastLogon,AccountExpires,PasswordExpires,UserMayChangePassword,PasswordRequired,PasswordLastSet,SID | Format-List" >> %results%
 		net user | findstr /r /v "^$" >> %results%
     call :closediv
 
@@ -544,7 +540,8 @@ echo -	network information including wireless
 	call :textarea
 	echo. >> %results%
 		ipconfig /all >> %results%
-		wmic nicconfig get description,IPAddress,MACaddress | findstr /I /C:":" >> %results%
+		powershell -c "Get-NetAdapter |Select Name,InterfaceDescription,InterfaceName,MacAddress,LinkSpeed" >> %results%
+        powershell -c "Get-NetIPAddress" >> %results%
         echo Host ISP and external IP info >> %results%
         powershell -nop irm ipinfo.io >> %results%
         nslookup myip.opendns.com resolver1.opendns.com >> %results%
@@ -603,7 +600,7 @@ echo -	current drive mappings to a remote computer
 	call :opendiv
 	call :textarea
 		net use | findstr /r /v "^$" | more >> %results%
-		wmic netuse list full /format:table | findstr /r /v "^$" | more >> %results%
+		powershell -c "Get-SMBMapping |Select LocalPath,RemotePath" | more >> %results%
     call :closediv
 	
 echo -	current network connections (detailed)
@@ -661,7 +658,7 @@ echo -	SAM, SYSTEM, SECURITY and SOFTWARE hives
 		if %errorlevel% == 0 echo SOFTWARE hive successfully extracted >> %results%
     call :closediv
 
-if /i "%grabhives:~,1%" EQU "y" ( 
+if /i %grabhives% EQU "y" ( 
     call :userhives
 ) else (
     echo null>nul
