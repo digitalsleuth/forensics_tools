@@ -2,15 +2,15 @@
 :: ***********************************************************************************************
 :: ** The Purpose of this Batch Script is to allow for mass mounting of Volume Shadow Copies to a 
 :: ** mount point on the local Windows filesystem. When mounting another disk or forensic image, 
-:: ** Arsenal Image Mounter will allow the shadow copies to (most recent successful test 3.0.79)
+:: ** Arsenal Image Mounter will allow the shadow copies to (most recent successful test 3.11.303)
 :: ** be seen.
 :: ** Feel free to modify this script as you see fit.
 :: ** Source: https://github.com/digitalsleuth/forensics_tools
-:: ** Last Update: 2020-09-06 Corey Forman
+:: ** Last Update: 2026-07-08 Corey Forman
 :: ***********************************************************************************************
 MODE con:cols=130
 setlocal
-set version=2.0
+set version=3.0
 @title vssmount v%version%
 goto admin
 :admin
@@ -40,9 +40,12 @@ ECHO To do this in Windows Servers 2008/12/16, run the following from an Adminis
 ECHO PowerShell Terminal:
 ECHO vssadmin create shadow /for=c: (or the volume of your choice)
 ECHO.
-ECHO To do this in Windows 7/8/8.1/10, run the following from an Administrator Command Prompt / 
-ECHO PowerShell Terminal:
+ECHO To do this in Windows 7/8/8.1/10, run the following from an Administrator Command Prompt
 ECHO wmic shadowcopy call create Volume=C:\ (requires proper case and the SLASH at the end)
+ECHO.
+ECHO To do this in Windows 11, run the following from an Administrator PowerShell Terminal:
+ECHO Invoke-CimMethod -MethodName Create -ClassName Win32_ShadowCopy -Arguments @{ Volume= "C:\\" }
+ECHO (requires proper case and the SLASH at the end)
 ECHO You can run vssadmin list volumes to get the correct volume identifier/path.
 ECHO.
 ECHO If you wish to mount a VSC manually, you can use the following commands:
@@ -100,12 +103,23 @@ goto choose
 :: Get Version as variable, and if variable equals something, use this command
 vssadmin list volumes | findstr /C:"Volume path"
 set /p driveletter="Choose your drive letter. Make sure it is in the correct case and includes the \: "
-for /f "tokens=2-3" %%i in ('wmic os get Caption ^|findstr Windows') do set version=%%i %%j
+for /f "tokens=2-3" %%i in ('powershell -c "(Get-CimInstance Win32_OperatingSystem).Caption"') do set version=%%i %%j
+if "%version%" == "Windows 11" goto create_ps
 if "%version%" == "Windows 10" goto create_wmic
 if "%version%" == "Windows 8.1" goto create_wmic
 if "%version%" == "Windows 8" goto create_wmic
 if "%version%" == "Windows 7" goto create_wmic
 if "%version%" == "Windows Server" goto create_vssadmin
+
+:create_ps
+powershell -c "Invoke-CimMethod -MethodName Create -ClassName Win32_ShadowCopy -Arguments @{ Volume= '%driveletter%\' } | Out-Null"
+if %errorlevel% == 0 (
+  ECHO VSC Created
+  goto choose
+  ) else (
+  ECHO Error creating VSC - Check your input for the correct case and try again
+  goto choose
+  )
 
 :create_wmic
 wmic shadowcopy call create Volume=%driveletter%
@@ -113,7 +127,7 @@ if %errorlevel% == 0 (
   ECHO VSC Created
   goto choose
   ) else (
-  ECHO Error creating VSC - Check your input for the correct case and \ and try again
+  ECHO Error creating VSC - Check your input for the correct case and try again
   goto choose
   )
 
@@ -123,7 +137,7 @@ if %errorlevel% == 0 (
   ECHO VSC Created
   goto choose
   ) else (
-  ECHO Error creating VSC - Check your input for the correct case and frive letter and try again
+  ECHO Error creating VSC - Check your input for the correct case and drive letter and try again
   goto choose
   )
 
@@ -273,5 +287,3 @@ set "fullpath="
 endlocal
 title Command Prompt
 exit /b
-
-
