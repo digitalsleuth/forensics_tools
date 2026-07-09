@@ -11,10 +11,10 @@
 :: ** Initial build: Cst. Percival Hall - 2013-12-20 ************************************
 :: ** Current build: Corey Forman - 2025-03-02 ******************************************
 :: **************************************************************************************
-:: ** Version 4.0 ***********************************************************************
+:: ** Version 4.1 ***********************************************************************
 
 setlocal
-set version=4.0
+set version=4.1
 TITLE Pilfer v%version% - github.com/digitalsleuth
 set workingdir=%~dp0
 for /f "usebackq tokens=*" %%i in (`powershell -c "(Get-Date -Format \"yyyy-MM-dd HH-mm-ss\")"`) do (
@@ -658,7 +658,7 @@ echo -	SAM, SYSTEM, SECURITY and SOFTWARE hives
 		if %errorlevel% == 0 echo SOFTWARE hive successfully extracted >> %results%
     call :closediv
 
-if /i %grabhives% EQU "y" ( 
+if /i %grabhives% EQU y ( 
     call :userhives
 ) else (
     echo null>nul
